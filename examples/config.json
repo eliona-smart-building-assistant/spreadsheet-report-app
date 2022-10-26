@@ -1,0 +1,49 @@
+{
+    "eliona_handler": {
+        "host": "YOUR_INSTANCE_NAME.eliona.io",
+        "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
+        "project_id": 1,
+        "api_key": "YOUR_ELIONA_API_KEY"
+    },
+
+    "reports": [
+        {
+            "name": "Report Name 001",
+            "schedule": "monthly",
+            "type": "DataListParallel",
+            "templateFile": "./tmp_reports/report_001.xlsx",
+            "sheet": "Sheet1",
+            "fileType": "xlsx",
+            "separator":"",
+            "firstRow": "0",
+            "fromTemplate": true,
+            "reportPath": "./tmp_reports/send/report_001.xlsx",
+            "receiver": [
+                {
+                    "name": "FirstName LastName",
+                    "msgType": "email",
+                    "msgEndpoint": "firstName.LastName@company.ch"
+                }                
+            ]
+        },
+        {
+            "name": "Report Name 002",
+            "schedule": "yearly",
+            "type": "DataEntry",
+            "templateFile": "./tmp_reports/report_002.csv",
+            "sheet": "",
+            "fileType": "csv",
+            "separator":"\t",
+            "firstRow": "0",
+            "fromTemplate": true,
+            "reportPath": "./tmp_reports/send/report_002.csv",
+            "receiver": [
+                {
+                    "name": "FirstName LastName",
+                    "msgType": "email",
+                    "msgEndpoint": "firstName.LastName@company.ch"
+                }                
+            ]
+        }
+    ]
+}

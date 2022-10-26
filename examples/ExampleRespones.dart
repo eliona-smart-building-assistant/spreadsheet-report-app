@@ -1,0 +1,60 @@
+{'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'data': {'enabled': 0.0, 'energy': 11.66, 'power': 21.12, 'status': 0.0},
+ 'subtype': 'input',
+ 'timestamp': datetime.datetime(2022, 7, 18, 20, 5, 44, 409000, tzinfo=tzoffset(None, 7200))}
+
+
+ {'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'data': {'enabled_setpoint': 0.0, 'temperature_sp': 1.76},
+ 'subtype': 'output',
+ 'timestamp': datetime.datetime(2022, 7, 18, 20, 5, 44, 409000, tzinfo=tzoffset(None, 7200))}, 
+ 
+ {'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'data': {'enabled': 0.0, 'energy': 11.66, 'power': 21.12, 'status': 0.0},
+ 'subtype': 'input',
+ 'timestamp': datetime.datetime(2022, 7, 18, 20, 5, 44, 409000, tzinfo=tzoffset(None, 7200))}
+
+
+
+{'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'attribute': 'power',
+ 'average': 33.70375000000001,
+ 'count': 24.0,
+ 'first': 33.06,
+ 'id': 266.0,
+ 'last': 33.97,
+ 'max': 34.2,
+ 'min': 33.06,
+ 'raster': 'H1',
+ 'subtype': 'input',
+ 'timestamp': datetime.datetime(2022, 7, 1, 2, 45, tzinfo=tzoffset(None, 7200))}, 
+ 
+ {'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'attribute': 'status',
+ 'average': 1.0,
+ 'count': 6.0,
+ 'first': 1.0,
+ 'id': 262.0,
+ 'last': 1.0,
+ 'max': 1.0,
+ 'min': 1.0,
+ 'raster': 'M15',
+ 'subtype': 'input',
+ 'timestamp': datetime.datetime(2022, 7, 1, 2, 45, tzinfo=tzoffset(None, 7200))},
+
+ {'asset_id': 65,
+ 'asset_type_name': 'VIRTUAL Multi Energie',
+ 'attribute': 'energy',
+ 'count': 6.0,
+ 'first': 39.63,
+ 'id': 256.0,
+ 'last': 41.61,
+ 'raster': 'M15',
+ 'subtype': 'input',
+ 'sum': 1.9799999999999969,
+ 'timestamp': datetime.datetime(2022, 7, 1, 19, 45, tzinfo=tzoffset(None, 7200))}
