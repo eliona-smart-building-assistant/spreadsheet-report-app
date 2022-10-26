@@ -7,7 +7,8 @@ import time
 from typing import Tuple
 import jsonschema
 from spreadsheetCreator import SpreadsheetCreator
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
+import pytz
 
 logging.basicConfig(filename="log.log", encoding="utf-8")
 LOGGER_NAME = "Scheduler"
@@ -187,25 +188,28 @@ class Spreadsheet_report_app:
 
 		"""
 
+		timezone.utc
 
 		_startTime = None
 		_endTime = None
+		_timeZone = pytz.timezone("Europe/Berlin")
+
 
 		if schedule == "yearly":
 
-			_startTime = datetime(year=(date.today().year -1), month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-			_endTime = datetime(year=(date.today().year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+			_startTime = datetime(year=(date.today().year -1), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+			_endTime = datetime(year=(date.today().year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
 
 		elif schedule == "monthly":
 
 			if (date.today().month == 1):
 
-				_startTime = datetime(year=(date.today().year - 1), month=12, day=1, hour=0, minute=0, second=0, microsecond=0)
-				_endTime = datetime(year=(date.today().year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+				_startTime = datetime(year=(date.today().year - 1), month=12, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+				_endTime = datetime(year=(date.today().year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
 
 			else:
-				_startTime = datetime(year=(date.today().year), month=(date.today().month - 1), day=1, hour=0, minute=0, second=0, microsecond=0)
-				_endTime = datetime(year=(date.today().year), month=(date.today().month), day=1, hour=0, minute=0, second=0, microsecond=0)
+				_startTime = datetime(year=(date.today().year), month=(date.today().month - 1), day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+				_endTime = datetime(year=(date.today().year), month=(date.today().month), day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
 
 		elif schedule == "weekly":
 
@@ -217,7 +221,6 @@ class Spreadsheet_report_app:
 
 		else:
 			LOGGER.error("Could define time span for schedule: {schedule}")
-
 
 		return (_startTime, _endTime)
 
