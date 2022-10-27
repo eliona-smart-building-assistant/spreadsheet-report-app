@@ -30,7 +30,8 @@ With the configuration you can define every requested settings in order to set u
     "host": "YOUR_INSTANCE_NAME.eliona.io",
     "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
     "project_id": 1,
-    "api_key": "YOUR_ELIONA_API_KEY"
+    "api_key": "YOUR_ELIONA_API_KEY",
+    "dbTimeZone": 2
 }
 ```
 

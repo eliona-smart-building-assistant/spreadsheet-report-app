@@ -26,20 +26,8 @@ class SpreadsheetCreator:
 	def __init__(self) -> None:
 		"""
 		Initialize the class
-		
-		startDt:datetime = start time of the report
-		endDt:datetime = end time of the report
 		"""
-
-		#logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-		#self.logger = logging.getLogger(f'{LOGGER}.{__name__}')
-		LOGGER.info("--------Init--------")
-
-		#self.settings = dict()
-		#self.startDateTime = startDt
-		#self.endDateTime = endDt
-		#self.timeTick = timedelta()
-		#self.settingsPath = settingsPath
+		pass
 
 	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict) -> bool:
 		"""
@@ -219,9 +207,9 @@ class SpreadsheetCreator:
 			else:
 				LOGGER.error("No valid table configuration.")
 
-		if _correctTimestamps:
-			self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampKey, timeStampFormat=_timeStampFormat)
-			_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
+		#if _correctTimestamps:
+		self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampKey, timeStampFormat=_timeStampFormat)
+		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
 
 		return _reportCreated
 
@@ -488,30 +476,6 @@ class SpreadsheetCreator:
 		#Return the _template
 		return _template
 
-	def __readSettings(self, settingsPath : str) -> dict | None:
-		"""
-		# read the settings and store them in the class variables
-
-		This method will read a json file to an dictionary
-
-		- settingsPath : str = Settings source path as string
-		"""
-
-		#Read the configuration file 
-		with open(settingsPath, "r") as settingsFile:
-			settingsJson = json.load(settingsFile)
-
-
-		#Get the eliona handler settings
-		if "eliona_handler" in settingsJson:
-			elionaHandlerSettings = settingsJson["eliona_handler"]
-		else:
-			LOGGER.error("eliona handler settings not found. Please check the config.json file")
-			exit()
-
-		return settingsJson
-
-
 
 if __name__ == "__main__":
 	"""
@@ -521,7 +485,7 @@ if __name__ == "__main__":
 	 #from_date="2022-07-01T00:00:00+02:00", to_date="2022-07-01T01:00:00+02:00"
 	_start = datetime.fromisoformat("2022-10-02T00:00:00+02:00")
 	_end = datetime.fromisoformat("2022-10-03T00:00:00+02:00")
-	_settingsPath = "./templates/cust/Syngenta/config.json"
+	_settingsPath = "./tmp_reports/Cust_Config/config.json"
 
 	karlaKolumna = SpreadsheetCreator()
 	karlaKolumna.run(_start, _end, _settingsPath)

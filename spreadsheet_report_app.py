@@ -148,10 +148,6 @@ class Spreadsheet_report_app:
 
 						_reportCreated = self.__createReport(connection=self.settings["eliona_handler"], report=_report)
 
-
-						#Debug Code
-						_reportCreated = True
-
 						# If report was created successfully we well try to send the data to the receivers 
 						if _reportCreated:
 							_storeNewData = self.__sendReport(report=_report)
@@ -173,7 +169,7 @@ class Spreadsheet_report_app:
 
 			time.sleep(40)
 
-	def __getReportTimeSpan(self, schedule:str) -> Tuple:
+	def __getReportTimeSpan(self, schedule:str, utcDelta:int) -> Tuple:
 		"""
 		Will return the last time span depending on the schedule settings
 
@@ -188,11 +184,9 @@ class Spreadsheet_report_app:
 
 		"""
 
-		timezone.utc
-
 		_startTime = None
 		_endTime = None
-		_timeZone = pytz.timezone("Europe/Berlin")
+		_timeZone = timezone(timedelta(hours=utcDelta), "BER")
 
 
 		if schedule == "yearly":
@@ -278,13 +272,13 @@ class Spreadsheet_report_app:
 		_reportName = report["name"]
 
 		#Get the timestamp of the start and the end for the report
-		_startTimeStamp, _endTimeStamp = self.__getReportTimeSpan(report["schedule"])
+		_startTimeStamp, _endTimeStamp = self.__getReportTimeSpan(report["schedule"], connection["dbTimeZone"])
 
 
 		LOGGER.info(f"Call the reporting function wit start {_startTimeStamp} and end timestamp {_endTimeStamp}")
 
-		_reporter = SpreadsheetCreator()
 		#Call the reporting function
+		_reporter = SpreadsheetCreator()
 		_reportSendFeedBack = _reporter.createReport(startDt=_startTimeStamp, endDt=_endTimeStamp, connectionSettings=connection, reportSettings=report)
 
 
@@ -307,7 +301,7 @@ class Spreadsheet_report_app:
 		"""
 
 
-		_retVal = False
+		_retVal = True
 
 		for _receiver in report["receiver"]:
 
@@ -321,7 +315,6 @@ class Spreadsheet_report_app:
 
 
 		return _retVal
-
 
 	def __readJSonFile(self, settingsPath : str, settingsScheme:dict) -> tuple[dict, bool]:
 		"""
