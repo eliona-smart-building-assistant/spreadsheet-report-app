@@ -5,6 +5,17 @@ You can create custom reports by using the template files and Konfiguration file
 
 
 
+## Quick start 
+
+Those are the required steps to get started.
+
+- Clone the repository
+- Copy the example settings from ./xxxx to ./yyyyy
+- Edit the config file to ure desire and add the report settings
+- Create or copy the templates
+- Test your application
+- Create an docker container
+- Deploy your app 
 
 ## Konfiguration
 
@@ -98,4 +109,118 @@ With the configuration you can define every requested settings in order to set u
 |name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
 |msgType|Selected message type. Currently only eMail is available|email|
 |msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
-             
+
+
+## Templates
+
+There are three different report templates. Each of them can be created as *.csv or *.xlsx file.
+
+### DataListSequential
+
+![Template_DatalistSequential](./doc/Template_DatalistSequential.png)
+
+The time stamp can be configured with the _timeStamp_ as format and the _raster_ as the used steps. The Python dattime time formatting can be used to format the timestamp.
+
+_**Example**_
+```json
+{
+    "timeStamp":"%Y-%m-%d %H:%M:%S", 
+    "raster":"H1"
+}	
+```
+
+The data is configured with the needed _assetId_, the required _attribute_ and the _mode_. 
+
+|Param|Description|
+|---|---|
+|assetId|The asset id as integer|
+|attribute|The Attribute from the asset as string|
+|mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
+
+
+
+_**Example**_
+```json
+{
+    "assetId":"10", 
+    "attribute":"power", 
+    "mode":"average"
+}
+```
+
+### DataListParallel
+
+![Template_DataListParallel](./doc/Template_DataListParalell.png)
+
+The time stamp can be configured with the _timeStamp_ as format and the _raster_ as the used steps. The Python dattime time formatting can be used to format the timestamp.
+
+_**Example**_
+```json
+{
+    "timeStamp":"%Y-%m-%d %H:%M:%S", 
+    "raster":"H1"
+}	
+```
+
+The data is configured with the needed _assetId_, the required _attribute_ and the _mode_. 
+
+|Param|Description|
+|---|---|
+|assetId|The asset id as integer|
+|attribute|The Attribute from the asset as string|
+|mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
+
+
+
+_**Example**_
+```json
+{
+    "assetId":"10", 
+    "attribute":"power", 
+    "mode":"average"
+}
+```
+
+
+### DataEntry
+
+![Template_DataEntry](./doc/Template_DataEntry.png)
+
+
+The time span start and stop can be set with an single parameter each. The Python dattime time formatting can be used to format the timestamp.
+
+
+_**Example**_
+```json
+{
+    "timeStampStart":"%Y-%m-%d"
+}	
+```
+
+_**Example**_
+```json
+{
+    "timeStampEnd":"%Y-%m-%d"
+}	
+```
+
+
+The data is configured with the needed _assetId_, the required _attribute_ the _mode_ and the raster. 
+
+|Param|Description|
+|---|---|
+|assetId|The asset id as integer|
+|attribute|The Attribute from the asset as string|
+|raster|Set the raster of the pipeline. <br> - H1 (Hour) <br> - m1 (month) <br> - year (full year)|
+|mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
+
+
+_**Example**_
+```json
+{
+    "assetId":"12", 
+    "attribute":"power", 
+    "raster":"H1", 
+    "mode":"last"
+}
+```
