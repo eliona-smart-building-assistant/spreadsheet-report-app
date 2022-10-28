@@ -1,9 +1,16 @@
 # Purpose
 
-Crete scheduled spreadsheet reports as *.csv or *.xlsx files.
-You can create custom reports by using the template files and Konfiguration files.
+Crete scheduled spreadsheet reports as *.csv or *.xlsx files and send them to the required destination.
+You can create custom reports by using template files and the configuration.
 
+# Functionality
 
+The application will gather the information from the aggregated pipelines from eliona and transform the information to the required spreadsheet. The application itself does no manipulation of the data. 
+Therefore the required grid needed to be set at the asset type attribute. 
+
+For example: If you would like to get the monthly average value of an attribute, the attribute need to have the monthly pipeline enabled.   
+
+![AssetTypeGrid](./doc/AssetTypeGrid.png)
 
 ## Quick start 
 
@@ -29,8 +36,8 @@ With the configuration you can define every requested settings in order to set u
  "eliona_handler": {
     "host": "YOUR_INSTANCE_NAME.eliona.io",
     "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
-    "project_id": 1,
-    "api_key": "YOUR_ELIONA_API_KEY",
+    "projectId": 1,
+    "apiKey": "YOUR_ELIONA_API_KEY",
     "dbTimeZone": 2
 }
 ```
@@ -40,8 +47,9 @@ With the configuration you can define every requested settings in order to set u
 |---|---|---|
 |host|Address of the eliona instance without the https|demo.eliona.cloud  
 |api|Address of the used api endpoint in this case every time with the https at front |https://develop.eliona.cloud/api/v2|
-|project_id|Project number at the used eliona instance. (You can get the number by editing the project and get tne number from the address bar)|1 ![ProjectNumber](./doc/ProjectNumber.png)|
-|api_key|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|  
+|projectId|Project number at the used eliona instance. (You can get the number by editing the project and get tne number from the address bar)|1 ![ProjectNumber](./doc/ProjectNumber.png)|
+|apiKey|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|
+|dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC offset as integer.|
 
 
 ### Reports  
@@ -91,7 +99,6 @@ With the configuration you can define every requested settings in order to set u
     }
 ]
 ```
-
 
 
 |***Configuration***|***Description***|***Example***|
