@@ -2,8 +2,8 @@
     "eliona_handler": {
         "host": "YOUR_INSTANCE_NAME.eliona.io",
         "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
-        "project_id": 1,
-        "api_key": "YOUR_ELIONA_API_KEY",
+        "projectId": 1,
+        "apiKey": "YOUR_ELIONA_API_KEY",
         "dbTimeZone": 2
     },
 
