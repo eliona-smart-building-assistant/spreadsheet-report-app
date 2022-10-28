@@ -54,7 +54,7 @@ class SpreadsheetCreator:
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			elif reportSettings["type"] == "DataEntry":
-				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=self.eliona, settings=reportSettings)
+				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			
 		else:
 			LOGGER.info("Connection not possible. Will try again.")
@@ -77,28 +77,38 @@ class SpreadsheetCreator:
 		#Read the template 
 		_dataTable = self.__readTableTemplate(settings=settings)
 
-		for rowIndex, row in _dataTable.iterrows(): #iterate over rows
-			for columnIndex, value in row.items():
+		for _rowIndex, _row in _dataTable.iterrows(): #iterate over rows
+			for _columnIndex, _value in _row.items():
 
 				#Search for json config
 				#{"assetId":"xxx", "attribute":"yyy"}
-				try:
-					_config = json.loads(value)
-				except:
-					_config = {}
-					LOGGER.exception("Config could not be loaded from cell.")
+				if type(_value) == str:
 
-				if ("assetId" in _config) and ("attribute" in _config):
+					try:
+						_config = json.loads(_value)
+					except:
+						_config = {}
+						#LOGGER.exception("Config could not be loaded from cell.")
 
-					#LOGGER.debug("Table config found: " + str(_config))
-					_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
-																				assetId=int(_config["assetId"]), 
-																				attribute=str(_config["attribute"]), 
-																				startDateTime=startDateTime, 
-																				endDateTime=endDateTime,
-																				raster=_config["raster"],
-																				mode=_config["mode"])
-		
+					if ("assetId" in _config) and ("attribute" in _config):
+
+						_endTimeOffset = timedelta(seconds=1)
+
+						#LOGGER.debug("Table config found: " + str(_config))
+						_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
+																					assetId=int(_config["assetId"]), 
+																					attribute=str(_config["attribute"]), 
+																					startDateTime=startDateTime, 
+																					endDateTime=endDateTime +_endTimeOffset,
+																					raster=_config["raster"],
+																					mode=_config["mode"])
+
+						LOGGER.debug(_data)
+
+						#Try to get the Data
+						if endDateTime in _data:
+							_dataTable.at[_rowIndex, _columnIndex] = _data[endDateTime]
+
 		#Write the Data to the 
 		if _correctTimestamps:
 			_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
@@ -114,7 +124,7 @@ class SpreadsheetCreator:
 		"""
 
 		#Init the data
-		_timeStampKey = ""
+		_timeStampColumnName = ""
 		_timeStampFormat = ""
 		_reportCreated = False
 		_correctTimestamps = False
@@ -139,14 +149,14 @@ class SpreadsheetCreator:
 
 		
 		#Search for the time stamp configuration
-		for _key in _configDict:
+		for _columnName in _configDict:
 
-			if "timeStamp" in _configDict[_key]:
+			if "timeStamp" in _configDict[_columnName]:
 				
-				_timeStampKey = _key #Save the timestamp key
-				_timeStampFormat = _configDict[_key]["timeStamp"]
+				_timeStampColumnName = _columnName #Save the timestamp key
+				_timeStampFormat = _configDict[_columnName]["timeStamp"]
 
-				_raster = str(_configDict[_key]["raster"])
+				_raster = str(_configDict[_columnName]["raster"])
 
 				#Get the time tick 
 				if _raster.startswith("H"):
@@ -170,7 +180,7 @@ class SpreadsheetCreator:
 				_count = 0
 				while _writeTimeRow:
 					 
-					_dataTable.at[_row, _key] = (startDateTime + (_count * timeTick))
+					_dataTable.at[_row, _columnName] = (startDateTime + (_count * timeTick))
 					_row = _row + 1
 					_count = _count + 1
 
@@ -178,37 +188,38 @@ class SpreadsheetCreator:
 						_writeTimeRow = False
 
 
-			elif (("assetId" in _configDict[_key])  
-					and ("attribute" in _configDict[_key]) 
-					and ("mode" in _configDict[_key])):
+			elif (("assetId" in _configDict[_columnName])  
+					and ("attribute" in _configDict[_columnName]) 
+					and ("mode" in _configDict[_columnName])):
 				
 				#LOGGER.debug("Table config found: " + str(_config))
 				_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
-																			assetId=int(_configDict[_key]["assetId"]), 
-																			attribute=str(_configDict[_key]["attribute"]), 
+																			assetId=int(_configDict[_columnName]["assetId"]), 
+																			attribute=str(_configDict[_columnName]["attribute"]), 
 																			startDateTime=startDateTime, 
 																			endDateTime=endDateTime,
 																			raster=_raster,
-																			mode=_configDict[_key]["mode"])
+																			mode=_configDict[_columnName]["mode"])
 
 				LOGGER.debug(_data)
 
-				for _index, _row in _dataTable.iterrows():
+				for _rowIndex, _row in _dataTable.iterrows():
 					
 					#Search for the TimeStamp
-					if _row[_timeStampKey] in _data:
+					if _row[_timeStampColumnName] in _data:
 						
 						#We found the timestamp. Lets write it to the data table
-						#_row[_key] = _data[_row[_timeStampKey]]
-						_dataTable.at[_index, _key] =_data[_dataTable.at[_index, _timeStampKey]]
+						_dataTable.at[_rowIndex, _columnName] =_data[_dataTable.at[_rowIndex, _timeStampColumnName]]
 					else:
-						_dataTable.at[_index, _key] = "none"
+						_dataTable.at[_rowIndex, _columnName] = "none"
 
 			else:
 				LOGGER.error("No valid table configuration.")
 
-		#if _correctTimestamps:
-		self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampKey, timeStampFormat=_timeStampFormat)
+		#Switch the timestamp to the correct format
+		self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampColumnName, timeStampFormat=_timeStampFormat)
+
+		#Write the data to file
 		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
 
 		return _reportCreated
@@ -226,9 +237,9 @@ class SpreadsheetCreator:
 		LOGGER.debug(data)
 
 		#Change the date and time format like requested in the template
-		for _index, _row in data.iterrows():		
+		for _rowIndex, _row in data.iterrows():		
 			#_row[timeStampKey] = _row[timeStampKey].strftime(timeStampFormat)
-			data.at[_index, timeStampKey] = data.at[_index, timeStampKey].strftime(timeStampFormat)
+			data.at[_rowIndex, timeStampKey] = data.at[_rowIndex, timeStampKey].strftime(timeStampFormat)
 
 
 		LOGGER.debug("After timestamp change:")
@@ -487,6 +498,6 @@ if __name__ == "__main__":
 	_end = datetime.fromisoformat("2022-10-03T00:00:00+02:00")
 	_settingsPath = "./tmp_reports/Cust_Config/config.json"
 
-	karlaKolumna = SpreadsheetCreator()
-	karlaKolumna.run(_start, _end, _settingsPath)
+	#karlaKolumna = SpreadsheetCreator()
+	#karlaKolumna.createReport(_start, _end, _settingsPath)
 	

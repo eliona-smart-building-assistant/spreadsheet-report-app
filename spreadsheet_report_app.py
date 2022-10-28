@@ -27,8 +27,8 @@ class Spreadsheet_report_app:
 			"eliona_handler": {
 				"host": {"type": "string"},
 				"api": {"type": "string"},
-				"project_id": {"type": "number"},
-				"api_key": {"type": "string"}
+				"projectId": {"type": "number"},
+				"apiKey": {"type": "string"}
 			},
 
 			"reports": [
