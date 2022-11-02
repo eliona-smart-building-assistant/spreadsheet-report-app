@@ -31,9 +31,19 @@ class SpreadsheetCreator:
 
 	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict) -> bool:
 		"""
-		Main method 
+		Create the requested report
 
-		args: 
+		Params
+		------ 
+		startDt:datetime			= Start time of the Report
+		endDt:datetime 				= End Time of teh Report => Will include the given end time by the data point as last entry
+		connectionSettings:dict 	= COnnection settings for the eliona handler
+		reportSettings:dict			= Settings for the to configured report
+
+		Return
+		----
+		bool -> Will return True if report was successfully created. // False if a error occurred
+
 		"""
 
 		#set the local variables

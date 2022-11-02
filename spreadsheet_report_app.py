@@ -7,6 +7,7 @@ import time
 from typing import Tuple
 import jsonschema
 from spreadsheetCreator import SpreadsheetCreator
+from mailHandler import MailHandler
 from datetime import datetime, timedelta, date, timezone
 import pytz
 
@@ -31,15 +32,23 @@ class Spreadsheet_report_app:
 				"apiKey": {"type": "string"}
 			},
 
+			"mail": {
+				"sender" : {"type", "string"},
+				"template": {
+					"path" : {"type", "string"},
+					"MimeType" : {"type", "string"}
+				}
+			},
+
 			"reports": [
 				{
 					"name": {"type": "string"},
 					"schedule": {"type": "string"},
-					"lastSend": {"type": "string"},
 					"type": {"type": "string"},
 					"templateFile": {"type": "string"},
 					"sheet": {"type": "string"},
 					"fileType": {"type": "string"},
+					"mimeType": {"type": "string"},
 					"separator":{"type": "string"},
 					"firstRow": {"type": "string"},
 					"fromTemplate": {"type": "boolean"},
@@ -77,6 +86,7 @@ class Spreadsheet_report_app:
 		self.settings = dict()
 		self.settingsPath = settingsPath
 		self.storagePath = "./state.json"
+		self.mailHandler = MailHandler()
 		
 	def run(self, args) -> None:
 		"""
@@ -150,7 +160,7 @@ class Spreadsheet_report_app:
 
 						# If report was created successfully we well try to send the data to the receivers 
 						if _reportCreated:
-							_storeNewData = self.__sendReport(report=_report)
+							_storeNewData = self.__sendReport(connection=self.settings["eliona_handler"], mailSettings=self.settings["mail"],  report=_report)
 
 						# Only save the timestamp if the file was written and send to the receivers
 						if _storeNewData:
@@ -286,7 +296,7 @@ class Spreadsheet_report_app:
 
 		return _reportSendFeedBack
 
-	def __sendReport(self, report:dict) -> bool:
+	def __sendReport(self, mailSettings:dict, report:dict) -> bool:
 		"""
 		Send the created reports to the configured receivers
 		
@@ -300,18 +310,9 @@ class Spreadsheet_report_app:
 
 		"""
 
-
 		_retVal = True
 
-		for _receiver in report["receiver"]:
-
-			_name = _receiver["name"]
-			_msgType = _receiver["msgType"]
-			_receiverMsgEndpoint = _receiver["msgEndpoint"]
-			_reportName = report["name"]
-
-
-			LOGGER.info(f"Sending report [{_reportName}] as {_msgType} message to: {_name} via {_receiverMsgEndpoint}") 
+		#_mailHandler.sendMail()
 
 
 		return _retVal
@@ -349,8 +350,14 @@ class Spreadsheet_report_app:
 		Validate the json file.Will be checked with a given scheme
 		WIll check if attributes with correct types are available
 
+		Param
+		-----
 		jsonData:dict = Real Json data as an Dictionary
 		jsonScheme:dict = Json scheme to verify the data as an dictionary
+
+		Return
+		-----
+		bool -> True if valid // False if not valid
 		"""
 		_retVal = False
 
