@@ -7,7 +7,7 @@ import time
 from typing import Tuple
 import jsonschema
 from spreadsheetCreator import SpreadsheetCreator
-from mailHandler import MailHandler
+from mail import Mail
 from datetime import datetime, timedelta, date, timezone
 import pytz
 
