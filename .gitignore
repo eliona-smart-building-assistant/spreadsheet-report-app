@@ -135,6 +135,7 @@ Documents/.DS_Store
 
 # Ignore Dev Environment
 /env/*
+/apiTest/*
 
 # Ignore temp reports
 /tmp_reports/*

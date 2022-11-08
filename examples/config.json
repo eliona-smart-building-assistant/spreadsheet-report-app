@@ -6,7 +6,13 @@
         "apiKey": "YOUR_ELIONA_API_KEY",
         "dbTimeZone": 2
     },
-
+    "mail": {
+        "sender" : "youMail@YourCompany.ch",
+        "template": {
+            "path" : "./tmp_reports/Cust_Config/mailTemplate.html",
+            "MimeType" : "text/html"
+        }
+    },
     "reports": [
         {
             "name": "Report Name 001",
@@ -15,6 +21,7 @@
             "templateFile": "./tmp_reports/report_001.xlsx",
             "sheet": "Sheet1",
             "fileType": "xlsx",
+            "mimeType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "separator":"",
             "firstRow": "0",
             "fromTemplate": true,
@@ -32,6 +39,7 @@
             "schedule": "yearly",
             "type": "DataEntry",
             "templateFile": "./tmp_reports/report_002.csv",
+            "mimeType":"text/csv",
             "sheet": "",
             "fileType": "csv",
             "separator":"\t",

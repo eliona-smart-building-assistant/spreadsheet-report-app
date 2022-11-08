@@ -86,7 +86,7 @@ class Spreadsheet_report_app:
 		self.settings = dict()
 		self.settingsPath = settingsPath
 		self.storagePath = "./state.json"
-		self.mailHandler = MailHandler()
+		self.mailHandler = Mail()
 		
 	def run(self, args) -> None:
 		"""
@@ -163,9 +163,9 @@ class Spreadsheet_report_app:
 							_storeNewData = self.__sendReport(connection=self.settings["eliona_handler"], mailSettings=self.settings["mail"],  report=_report)
 
 						# Only save the timestamp if the file was written and send to the receivers
-						if _storeNewData:
-							#Save the timestamp and store it after all reports are done
-							_reportLastSend["reports"][_reportName] = datetime.now().date() 
+						#if _storeNewData:
+						#	#Save the timestamp and store it after all reports are done
+						#	_reportLastSend["reports"][_reportName] = datetime.now().date() 
 
 			else:
 				LOGGER.error("Skipped the Create report process due to errors in the settings")
@@ -296,7 +296,7 @@ class Spreadsheet_report_app:
 
 		return _reportSendFeedBack
 
-	def __sendReport(self, mailSettings:dict, report:dict) -> bool:
+	def __sendReport(self, connection:dict, mailSettings:dict, report:dict) -> bool:
 		"""
 		Send the created reports to the configured receivers
 		
