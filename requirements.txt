@@ -1,19 +1,23 @@
-
-#eliona
-git+https://support:xEqdhsQqZYAwWXCafAps@gitlab.leicom.ch/pm/eliona-api-handler.git#egg=eliona-modules
-
-#Excel Import
-pandas
-openpyxl
-
-#PDF generator 
-reportlab==3.6.11
-
-#Scheduling
-schedule==1.1.0
-
-
-
-#Validation checks
-jsonschema==4.16.0
+## The following requirements were added by pip freeze:
+attrs==22.1.0
+certifi==2022.9.24
+dnspython==2.2.1
+eliona-modules==1.0.3
 email-validator==1.3.0
+et-xmlfile==1.1.0
+frozendict==2.3.4
+idna==3.4
+jsonschema==4.16.0
+numpy==1.23.4
+openpyxl==3.0.10
+pandas==1.5.1
+Pillow==9.3.0
+pyrsistent==0.19.2
+python-dateutil==2.8.2
+Python-Eliona-API-client==1.0.0
+pytz==2022.6
+reportlab==3.6.11
+schedule==1.1.0
+six==1.16.0
+typing_extensions==4.3.0
+urllib3==1.26.12

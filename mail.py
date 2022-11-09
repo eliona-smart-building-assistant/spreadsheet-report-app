@@ -7,8 +7,8 @@ from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 import base64
 
-#from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
-#from eliona.api_client.model.message import Message
+from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
+from eliona.api_client.model.message import Message
 
 logging.basicConfig(filename="log.log", encoding="utf-8")
 LOGGER_NAME = "mail"
@@ -55,6 +55,7 @@ class Mail:
 		self.state = MailState.IDLE
 		self.sendDate = datetime(1990,1,1)
 		self.config = {}
+		self.messageData = None
 
 		pass
 
@@ -102,14 +103,15 @@ class Mail:
 			self.config["receiver"] = []
 
 			for _receiver in receiver:
-				self.config["receiver"] = validate_email(_receiver)
+				self.config["receiver"].append(validate_email(_receiver))
 
 
 			#Set up the "html mail body
-			self.config["messageBody"] = self.__createHtmlBody(htmlTemplate=senderConfig["template"]["path"], data=mailData)
+			#self.config["messageBody"] = self.__createHtmlBody(htmlTemplate=senderConfig["template"]["path"], data=mailData)
+			_content = mailData["REPORT_HEADER"] + "<br>" + mailData["REPORT_BODY"] + "<br>" + mailData["APP_VERSION"]
 
-
-			#messageData = Message()
+			#Set up the message data
+			self.messageData = Message(recipients=self.config["receiver"], content=_content, sender=self.config["sender"]["mail"])
 
 
 		except EmailNotValidError as e:

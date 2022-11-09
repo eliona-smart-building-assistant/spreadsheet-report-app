@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
 logging.basicConfig(filename="log.log", encoding="utf-8")
-LOGGER_NAME = "Spreadsheet Creator"
+LOGGER_NAME = "Spreadsheet"
 LOGGER = logging.getLogger(LOGGER_NAME)
 HANDLER = logging.StreamHandler()
 HANDLER.setLevel(logging.DEBUG)
@@ -19,7 +19,7 @@ FORMATTER = logging.Formatter(fmt="%(asctime)s: %(name)s: %(levelname)s: %(linen
 HANDLER.setFormatter(FORMATTER)
 LOGGER.addHandler(HANDLER)
 
-class SpreadsheetCreator:
+class Spreadsheet:
 
 	INT_DEBUG_DEPTH = 10
 
@@ -27,9 +27,11 @@ class SpreadsheetCreator:
 		"""
 		Initialize the class
 		"""
+
+		self.reportFilePath = ""
 		pass
 
-	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict) -> bool:
+	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict, reportFilePath:str) -> bool:
 		"""
 		Create the requested report
 
@@ -45,6 +47,8 @@ class SpreadsheetCreator:
 		bool -> Will return True if report was successfully created. // False if a error occurred
 
 		"""
+
+		self.reportFilePath = reportFilePath
 
 		#set the local variables
 		_reportCreatedSuccessfully = False
@@ -82,7 +86,7 @@ class SpreadsheetCreator:
 
 		#Only copy the template if needed 
 		if settings["fromTemplate"]:
-			shutil.copyfile(src=settings["templateFile"], dst=settings["reportPath"])
+			shutil.copyfile(src=settings["templateFile"], dst=self.reportFilePath)
 
 		#Read the template 
 		_dataTable = self.__readTableTemplate(settings=settings)
@@ -141,7 +145,7 @@ class SpreadsheetCreator:
 
 		#Only copy the template if needed 
 		if settings["fromTemplate"]:
-			shutil.copyfile(src=settings["templateFile"], dst=settings["reportPath"])
+			shutil.copyfile(src=settings["templateFile"], dst=self.reportFilePath)
 
 		#Read the template 
 		_dataTable = self.__readTableTemplate(settings=settings)
@@ -270,7 +274,7 @@ class SpreadsheetCreator:
 		try:
 			if (settings["fileType"] == "xlsx") or (settings["fileType"] == "xls"):
 
-				with pd.ExcelWriter(path=(settings["reportPath"]), mode="a", if_sheet_exists="overlay") as writer:
+				with pd.ExcelWriter(path=(self.reportFilePath), mode="a", if_sheet_exists="overlay") as writer:
 					data.to_excel(writer, sheet_name= settings["sheet"], index=False)
 
 				# Write the file was successful
@@ -284,14 +288,14 @@ class SpreadsheetCreator:
 				else:
 					_mode = "w"
 				
-				data.to_csv(path_or_buf= (settings["reportPath"]), mode=_mode, index=False, header=True, sep=settings["separator"])
+				data.to_csv(path_or_buf= (self.reportFilePath), mode=_mode, index=False, header=True, sep=settings["separator"])
 				
 				# Write the file was successful
 				_fileWritten = True
 			
 
 		except:
-			LOGGER.exception("Could not write Data to File: " + settings["reportPath"])
+			LOGGER.exception("Could not write Data to File: " + self.reportFilePath)
 
 		return _fileWritten
 
@@ -301,6 +305,8 @@ class SpreadsheetCreator:
 		Get an attribute value from the given time span with tick
 		Will return an dictionary with time stamp as key
 
+		Params
+		------
 		eliona:ElionaApiHandler	= eliona API Handler instance
 		assetId:int = Asset ID to get the data from
 		attribute:str = Attribute from the Asset to read the data from
@@ -308,6 +314,8 @@ class SpreadsheetCreator:
 		endDateTime:datetime = End pint for the dictionary
 		tick:timedelta = pipeline raster to search for.
 
+		Return
+		------
 		-> (dict:{datetime, dataValue}|None, bool: True= keys are valid // False = at least one key timestamp is missing)	
 		"""
 
@@ -508,6 +516,6 @@ if __name__ == "__main__":
 	_end = datetime.fromisoformat("2022-10-03T00:00:00+02:00")
 	_settingsPath = "./tmp_reports/Cust_Config/config.json"
 
-	#karlaKolumna = SpreadsheetCreator()
+	#karlaKolumna = Spreadsheet()
 	#karlaKolumna.createReport(_start, _end, _settingsPath)
 	

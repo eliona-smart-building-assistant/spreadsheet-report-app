@@ -6,7 +6,7 @@ import logging
 import time
 from typing import Tuple
 import jsonschema
-from spreadsheetCreator import SpreadsheetCreator
+from spreadsheet import Spreadsheet
 from mail import Mail
 from datetime import datetime, timedelta, date, timezone
 import pytz
@@ -287,9 +287,12 @@ class Spreadsheet_report_app:
 
 		LOGGER.info(f"Call the reporting function wit start {_startTimeStamp} and end timestamp {_endTimeStamp}")
 
+		_reportFileAndPath = self.settings["general"]["reportFolderPath"] + report["reportPath"] + "_" + _startTimeStamp.date().isoformat() + "_" + _endTimeStamp.date().isoformat() + "." + report["fileType"]
+
+
 		#Call the reporting function
-		_reporter = SpreadsheetCreator()
-		_reportSendFeedBack = _reporter.createReport(startDt=_startTimeStamp, endDt=_endTimeStamp, connectionSettings=connection, reportSettings=report)
+		_reporter = Spreadsheet()
+		_reportSendFeedBack = _reporter.createReport(startDt=_startTimeStamp, endDt=_endTimeStamp, connectionSettings=connection, reportSettings=report, reportFilePath=_reportFileAndPath)
 
 
 		LOGGER.info(f"Report: {_reportName} was send successfully: {_reportSendFeedBack}")
