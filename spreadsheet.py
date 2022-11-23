@@ -4,32 +4,26 @@ import logging
 import time
 import pandas as pd
 import shutil
-
+import utils.logger as log
 from datetime import datetime, timedelta
 
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
-logging.basicConfig(filename="log.log", encoding="utf-8")
 LOGGER_NAME = "Spreadsheet"
-LOGGER = logging.getLogger(LOGGER_NAME)
-HANDLER = logging.StreamHandler()
-HANDLER.setLevel(logging.DEBUG)
-LOGGER.setLevel(logging.DEBUG)
-FORMATTER = logging.Formatter(fmt="%(asctime)s: %(name)s: %(levelname)s: %(lineno)d: %(message)s", datefmt="%d-%m-%y %H:%M:%S")
-HANDLER.setFormatter(FORMATTER)
-LOGGER.addHandler(HANDLER)
+LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 
 class Spreadsheet:
 
+	logger = log.createLogger(LOGGER_NAME, loglevel=LOGGER_LEVEL)
 	INT_DEBUG_DEPTH = 10
 
-	def __init__(self) -> None:
+	def __init__(self, logLevel:int=log.LOG_LEVEL_DEBUG) -> None:
 		"""
 		Initialize the class
 		"""
 
 		self.reportFilePath = ""
-		pass
+		self.logger = log.createLogger(LOGGER_NAME, loglevel=logLevel)
 
 	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict, reportFilePath:str) -> bool:
 		"""
@@ -53,8 +47,8 @@ class Spreadsheet:
 		#set the local variables
 		_reportCreatedSuccessfully = False
 
-		LOGGER.info("--------connect--------")
-		LOGGER.debug("Host: " + str(connectionSettings["host"]))
+		self.logger.info("--------connect--------")
+		self.logger.debug("Host: " + str(connectionSettings["host"]))
 
 		#Connect to the eliona instance
 		eliona = ElionaApiHandler(settings=connectionSettings, logger=LOGGER_NAME)
@@ -63,7 +57,7 @@ class Spreadsheet:
 		#Check if the connection is established
 		if eliona.connection == ConStat.CONNECTED:
 				
-			LOGGER.info("--------Create Table--------")
+			self.logger.info("--------Create Table--------")
 			#Call the report creator
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
@@ -71,7 +65,7 @@ class Spreadsheet:
 				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			
 		else:
-			LOGGER.info("Connection not possible. Will try again.")
+			self.logger.info("Connection not possible. Will try again.")
 
 		return _reportCreatedSuccessfully
 
@@ -102,13 +96,13 @@ class Spreadsheet:
 						_config = json.loads(_value)
 					except:
 						_config = {}
-						#LOGGER.exception("Config could not be loaded from cell.")
+						#self.logger.exception("Config could not be loaded from cell.")
 
 					if ("assetId" in _config) and ("attribute" in _config):
 
 						_endTimeOffset = timedelta(seconds=1)
 
-						#LOGGER.debug("Table config found: " + str(_config))
+						#self.logger.debug("Table config found: " + str(_config))
 						_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																					assetId=int(_config["assetId"]), 
 																					attribute=str(_config["attribute"]), 
@@ -117,7 +111,7 @@ class Spreadsheet:
 																					raster=_config["raster"],
 																					mode=_config["mode"])
 
-						LOGGER.debug(_data)
+						self.logger.debug(_data)
 
 						#Try to get the Data
 						if endDateTime in _data:
@@ -185,7 +179,7 @@ class Spreadsheet:
 
 					timeTick = timedelta(seconds=int(_raster.removeprefix("S")))	
 				else:
-					LOGGER.error("No valid time span found")
+					self.logger.error("No valid time span found")
 					exit()
 				
 				#Set the time column
@@ -206,7 +200,7 @@ class Spreadsheet:
 					and ("attribute" in _configDict[_columnName]) 
 					and ("mode" in _configDict[_columnName])):
 				
-				#LOGGER.debug("Table config found: " + str(_config))
+				#self.logger.debug("Table config found: " + str(_config))
 				_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																			assetId=int(_configDict[_columnName]["assetId"]), 
 																			attribute=str(_configDict[_columnName]["attribute"]), 
@@ -215,7 +209,7 @@ class Spreadsheet:
 																			raster=_raster,
 																			mode=_configDict[_columnName]["mode"])
 
-				LOGGER.debug(_data)
+				self.logger.debug(_data)
 
 				for _rowIndex, _row in _dataTable.iterrows():
 					
@@ -228,7 +222,7 @@ class Spreadsheet:
 						_dataTable.at[_rowIndex, _columnName] = "none"
 
 			else:
-				LOGGER.error("No valid table configuration.")
+				self.logger.error("No valid table configuration.")
 
 		#Switch the timestamp to the correct format
 		self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampColumnName, timeStampFormat=_timeStampFormat)
@@ -247,8 +241,8 @@ class Spreadsheet:
 		timeStampFormat:str = timestamp format to use
 		"""
 
-		LOGGER.debug("Before timestamp change")
-		LOGGER.debug(data)
+		self.logger.debug("Before timestamp change")
+		self.logger.debug(data)
 
 		#Change the date and time format like requested in the template
 		for _rowIndex, _row in data.iterrows():		
@@ -256,8 +250,8 @@ class Spreadsheet:
 			data.at[_rowIndex, timeStampKey] = data.at[_rowIndex, timeStampKey].strftime(timeStampFormat)
 
 
-		LOGGER.debug("After timestamp change:")
-		LOGGER.debug(data)
+		self.logger.debug("After timestamp change:")
+		self.logger.debug(data)
 
 	def __writeDataToFile(self, data:pd.DataFrame, settings:dict)-> bool:
 		"""
@@ -295,7 +289,7 @@ class Spreadsheet:
 			
 
 		except:
-			LOGGER.exception("Could not write Data to File: " + self.reportFilePath)
+			self.logger.exception("Could not write Data to File: " + self.reportFilePath)
 
 		return _fileWritten
 
@@ -325,7 +319,7 @@ class Spreadsheet:
 
 		try:
 
-			LOGGER.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
+			self.logger.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
 							startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
 				
@@ -342,7 +336,7 @@ class Spreadsheet:
 				for _data in _retVal:
 
 					#Logg the received data
-					#LOGGER.debug(_data)
+					#self.logger.debug(_data)
 
 					#write the info to the LOGGER
 					if ((_data["asset_id"] == assetId)
@@ -353,9 +347,9 @@ class Spreadsheet:
 
 						_dataSet[_data["timestamp"]] = _data[mode]
 
-						#LOGGER.debug("Asset ID: " + str(assetId) + " // attribute: "+ str(attribute) 
+						#self.logger.debug("Asset ID: " + str(assetId) + " // attribute: "+ str(attribute) 
 						#			+ " // raster: " + str(raster) + " // mode: " + str(mode))
-						LOGGER.debug(	"Timestamp" + str(_data["timestamp"]) + " // AssetId:  " + 
+						self.logger.debug(	"Timestamp" + str(_data["timestamp"]) + " // AssetId:  " + 
 								str(_data["asset_id"]) + " // Attribute: " + str(_data["attribute"]) + 
 								" // Raster: " + str(_data["raster"]) + " // Value: " +str(_data[mode]))
 
@@ -396,14 +390,14 @@ class Spreadsheet:
 					_currentTimeSpan = _currentTimeSpan + _timeDelta
 
 				if not _validKeys:
-					LOGGER.error(_missedTimeStamps)
+					self.logger.error(_missedTimeStamps)
 
 			# Reset valid keys if empty data was received
 			else:
 				_validKeys = False
 
 		except:
-			LOGGER.exception("Exception getting aggregated data")
+			self.logger.exception("Exception getting aggregated data")
 		
 		#Return the values
 		return (_dataSet, _validKeys)
@@ -430,7 +424,7 @@ class Spreadsheet:
 
 		try:
 
-			#LOGGER.debug("get data from: assetId:" + str(assetId) + " attribute:" + attribute + 
+			#self.logger.debug("get data from: assetId:" + str(assetId) + " attribute:" + attribute + 
 			# " start date:" + startDateTime.isoformat() + " end date:" + endDateTime.isoformat() + 
 			# " tick:" + str(tick) )
 
@@ -467,7 +461,7 @@ class Spreadsheet:
 
 
 		except:
-			LOGGER.exception("Error ocurred during reading the trend data")
+			self.logger.exception("Error ocurred during reading the trend data")
 			
 
 		#Return the values
@@ -499,7 +493,7 @@ class Spreadsheet:
 					_template = pd.read_excel(io=settings["templateFile"], sheet_name=settings["sheet"])
 	
 		except OSError:
-			LOGGER.exception("Template file could not be opened: " + settings["templateFile"])
+			self.logger.exception("Template file could not be opened: " + settings["templateFile"])
 
 
 		#Return the _template

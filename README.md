@@ -42,7 +42,6 @@ With the configuration you can define every requested settings in order to set u
 }
 ```
 
-
 |***Configuration***|***Description***|***Example***|
 |---|---|---|
 |host|Address of the eliona instance without the https|demo.eliona.cloud  
@@ -51,10 +50,16 @@ With the configuration you can define every requested settings in order to set u
 |apiKey|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|
 |dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC offset as integer.|
 
+### Report Scheduler
+
+You can ether create an user based or report based schedule. If you like you can also mixe them together. 
+
+The user based report will combine all reports to one attachment and send them to the required user. This will generate one mail per user even tho the user will receive multiple reports.
+
+With the report based schedule you will send one mail per report to different users. The mail will send by blind copy to every user. With this schedule one user may receive multiple mails. One mail for each report.
+
 
 ### Reports  
-
-
 
 ```JSON
 

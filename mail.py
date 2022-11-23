@@ -6,31 +6,13 @@ from enum import Enum
 from datetime import datetime
 from email_validator import validate_email, EmailNotValidError
 import base64
-
+from enums import ReportState
+import utils.logger as log
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 from eliona.api_client.model.message import Message
 
-logging.basicConfig(filename="log.log", encoding="utf-8")
+
 LOGGER_NAME = "mail"
-LOGGER = logging.getLogger(LOGGER_NAME)
-HANDLER = logging.StreamHandler()
-HANDLER.setLevel(logging.DEBUG)
-LOGGER.setLevel(logging.DEBUG)
-FORMATTER = logging.Formatter(fmt="%(asctime)s: %(name)s: %(levelname)s: %(lineno)d: %(message)s", datefmt="%d-%m-%y %H:%M:%S")
-HANDLER.setFormatter(FORMATTER)
-LOGGER.addHandler(HANDLER)
-
-class MailState(Enum):
-    """
-	Mail state definition
-	"""
-    IDLE = 0
-
-    CREATION = 1
-    QUED = 20
-    SEND = 30
-
-    CANCELED  = 100
 
 class Mail:
 	"""
@@ -40,8 +22,13 @@ class Mail:
 	Will async report about the state
 	"""
 
+	logger = None
+	state = ReportState.IDLE
+	sendDate = datetime(1990,1,1)
+	config = {}
+	messageData = None
 
-	def __init__(self) -> None:
+	def __init__(self, logLevel:int=log.LOG_LEVEL_DEBUG) -> None:
 		"""
 		Init the class
 
@@ -51,13 +38,7 @@ class Mail:
 		-----
 		-> None
 		"""
-
-		self.state = MailState.IDLE
-		self.sendDate = datetime(1990,1,1)
-		self.config = {}
-		self.messageData = None
-
-		pass
+		self.logger = log.createLogger(LOGGER_NAME, loglevel=logLevel)
 
 
 	def configure(self, senderConfig:dict, receiver:list, attachments:list, mailData:dict)->bool:
@@ -96,7 +77,7 @@ class Mail:
 
 
 			#Set up the attachments
-			self.config["Attachments"] = self.__readAttachments(attachments=attachments)
+			self.config["Attachments"] = self._readAttachments(attachments=attachments)
 
 
 			#Set up the receivers
@@ -107,7 +88,7 @@ class Mail:
 
 
 			#Set up the "html mail body
-			#self.config["messageBody"] = self.__createHtmlBody(htmlTemplate=senderConfig["template"]["path"], data=mailData)
+			#self.config["messageBody"] = self._createHtmlBody(htmlTemplate=senderConfig["template"]["path"], data=mailData)
 			_content = mailData["REPORT_HEADER"] + "<br>" + mailData["REPORT_BODY"] + "<br>" + mailData["APP_VERSION"]
 
 			#Set up the message data
@@ -116,18 +97,18 @@ class Mail:
 
 		except EmailNotValidError as e:
 
-			LOGGER.error("Invalid email\n" + e) #Print the error
+			self.logger.error("Invalid email\n" + e) #Print the error
 
 		except:
 
 			e = sys.exc_info()[0] #Get the error
-			LOGGER.error(e) #Print the error
+			self.logger.error(e) #Print the error
 			_retVal = False
 
 		return _retVal
 
 
-	def sendMail(self, connection:dict, sender:dict, report:dict) -> None:
+	def sendMail(self, connection:dict, sender:dict, reports:list ) -> None:
 		"""
 		Sending mail with the api V" to connect the 
 
@@ -146,8 +127,8 @@ class Mail:
 		#set the local variables
 		_mailSendSuccessfully = False
 
-		LOGGER.info("--------connect--------")
-		LOGGER.debug("Host: " + str(connection["host"]))
+		self.logger.info("--------connect--------")
+		self.logger.debug("Host: " + str(connection["host"]))
 
 		#Connect to the eliona instance
 		#eliona = ElionaApiHandler(settings=connection, logger=LOGGER_NAME)
@@ -157,15 +138,15 @@ class Mail:
 		if True: #eliona.connection == ConStat.CONNECTED:
 
 			#Send the mail
-			LOGGER.debug("Send mail")
+			self.logger.debug("Send mail")
 			
 		else:
-			LOGGER.info("Connection not possible. Will try again.")
+			self.logger.info("Connection not possible. Will try again.")
 
 		return _mailSendSuccessfully
 
 
-	def __sendMailThread(self, config:dict) -> None:
+	def _sendMailThread(self, config:dict) -> None:
 		"""
 		Send the mail as a thread and check the state till mail was send after sheduled time reached
 
@@ -182,7 +163,7 @@ class Mail:
 		pass
 
 
-	def __readAttachments(self, attachments:list)->list:
+	def _readAttachments(self, attachments:list)->list:
 		"""
 		Read the attachments and transform them to an base64 based string
 
@@ -220,7 +201,7 @@ class Mail:
 		pass
 
 
-	def __createHtmlBody(self, htmlTemplate:str, data:dict)->str:
+	def _createHtmlBody(self, htmlTemplate:str, data:dict)->str:
 		"""
 		Create the HTML Body for the mail to be send.
 		

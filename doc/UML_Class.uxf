@@ -1,4 +1,4 @@
-<diagram program="umletino" version="15.0.0"><zoom_level>10</zoom_level><element><id>UMLClass</id><coordinates><x>1210</x><y>390</y><w>260</w><h>280</h></coordinates><panel_attributes>Mail
+<diagram program="umletino" version="15.0.0"><zoom_level>10</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLClass</id><coordinates><x>1220</x><y>760</y><w>260</w><h>280</h></coordinates><panel_attributes>Mail
 --
 -state: enum
 -config: dict
@@ -16,24 +16,22 @@
 
 Responsibilities
 -- Resp1
-*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1270</x><y>880</y><w>210</w><h>70</h></coordinates><panel_attributes>_object: mail_
+*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>50</x><y>360</y><w>260</w><h>280</h></coordinates><panel_attributes>Spreadsheet_report_app
 --
-state: enum="idle"
-[waiting for message]</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1300</x><y>660</y><w>130</w><h>240</h></coordinates><panel_attributes>lt=&lt;.
-&lt;&lt;instanceOf&gt;&gt;</panel_attributes><additional_attributes>10;10;70;220</additional_attributes></element><element><id>UMLClass</id><coordinates><x>130</x><y>110</y><w>260</w><h>280</h></coordinates><panel_attributes>Schedular
---
+
 -state: enum
 -config: dict
 
 --
+
 +run(): none
 -readSettings(): dict
 -verifysettings(): bool
+
 --
-</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>850</x><y>70</y><w>260</w><h>330</h></coordinates><panel_attributes>Report
+Scheduling</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>460</x><y>360</y><w>260</w><h>330</h></coordinates><panel_attributes>Report(SendBase)
 --
 +lastSend: list
-+schedule: enum
 +name: str
 +ReportPath: str
 
@@ -48,17 +46,7 @@ state: enum="idle"
 -sendThread(config: dict): none
 --
 
-Responsibilities
--- Resp1
-*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>870</x><y>500</y><w>210</w><h>70</h></coordinates><panel_attributes>_object: mail_
---
-state: enum="idle"
-[waiting for message]</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>960</x><y>390</y><w>110</w><h>130</h></coordinates><panel_attributes>lt=&lt;.
-&lt;&lt;instanceOf&gt;&gt;</panel_attributes><additional_attributes>10;10;20;110</additional_attributes></element><element><id>UMLClass</id><coordinates><x>140</x><y>570</y><w>210</w><h>70</h></coordinates><panel_attributes>_object: mail_
---
-state: enum="idle"
-[waiting for message]</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>230</x><y>380</y><w>110</w><h>210</h></coordinates><panel_attributes>lt=&lt;.
-&lt;&lt;instanceOf&gt;&gt;</panel_attributes><additional_attributes>20;10;10;190</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1210</x><y>70</y><w>260</w><h>280</h></coordinates><panel_attributes>Spreadsheet
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1220</x><y>460</y><w>260</w><h>280</h></coordinates><panel_attributes>Spreadsheet
 --
 -state: enum
 -config: dict
@@ -76,17 +64,48 @@ state: enum="idle"
 
 Responsibilities
 -- Resp1
-*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>470</x><y>110</y><w>260</w><h>280</h></coordinates><panel_attributes>User
+*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>720</x><y>730</y><w>260</w><h>280</h></coordinates><panel_attributes>User(SendBase)
 --
 
++lastSend:list
++userName:str
++userMail:str
 -state: enum
 -config: dict
 
 --
 
-+sendMail(reports:list)
++configure()
++sendReportl(reports:list)
+-processThread()
 -checkReportAvailable()
 -createReport()
+-sendToUser()
 
 --
-</panel_attributes><additional_attributes></additional_attributes></element></diagram>
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>300</x><y>610</y><w>440</w><h>250</h></coordinates><panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes><additional_attributes>10;10;420;230</additional_attributes></element><element><id>Relation</id><coordinates><x>970</x><y>660</y><w>270</w><h>170</h></coordinates><panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes><additional_attributes>10;150;250;10</additional_attributes></element><element><id>Relation</id><coordinates><x>970</x><y>790</y><w>270</w><h>100</h></coordinates><panel_attributes>lt=&lt;-
+m1= 1</panel_attributes><additional_attributes>10;80;250;10</additional_attributes></element><element><id>Relation</id><coordinates><x>300</x><y>440</y><w>180</w><h>50</h></coordinates><panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes><additional_attributes>10;20;160;10</additional_attributes></element><element><id>Relation</id><coordinates><x>710</x><y>400</y><w>530</w><h>110</h></coordinates><panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes><additional_attributes>10;10;510;90</additional_attributes></element><element><id>Relation</id><coordinates><x>710</x><y>480</y><w>530</w><h>310</h></coordinates><panel_attributes>lt=&lt;-
+m1=1</panel_attributes><additional_attributes>10;10;510;290</additional_attributes></element><element><id>UMLClass</id><coordinates><x>690</x><y>0</y><w>260</w><h>280</h></coordinates><panel_attributes>SendBase
+--
+
++lastSend:list
+-state: enum
+-config: dict
+-messageData:dict
+.mailHandler:Mail
+
+--
+
++configure()
++sendReport(reports:list)
+-processThread()
+-checkReportAvailable()
+-createReport()
+-sendToUser()
+
+--
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>630</x><y>270</y><w>130</w><h>110</h></coordinates><panel_attributes>lt=&lt;..</panel_attributes><additional_attributes>110;10;10;90</additional_attributes></element><element><id>Relation</id><coordinates><x>830</x><y>270</y><w>50</w><h>480</h></coordinates><panel_attributes>lt=&lt;..</panel_attributes><additional_attributes>10;10;30;460</additional_attributes></element></diagram>
