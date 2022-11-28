@@ -16,20 +16,30 @@
 
 Responsibilities
 -- Resp1
-*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>50</x><y>360</y><w>260</w><h>280</h></coordinates><panel_attributes>Spreadsheet_report_app
+*-- Resp2*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>50</x><y>360</y><w>260</w><h>360</h></coordinates><panel_attributes>Spreadsheet_report_app
 --
 
--state: enum
--config: dict
++logger:Logger
++settings:dict
++settingsPath:str
++storagePath:str
++testing:bool
++timeTable:list
++timeIndex:int
++users:dict[str, User]
++reports:dict[str, Report]
 
 --
 
-+run(): none
--readSettings(): dict
--verifysettings(): bool
++__init__():none
++run(): None
+-_readJsonFile(): dict
+-_validateJson(): bool
+-_now():datetime
+-_backToTheFuture():datetime
 
 --
-Scheduling</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>460</x><y>360</y><w>260</w><h>330</h></coordinates><panel_attributes>Report(SendBase)
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>460</x><y>360</y><w>260</w><h>330</h></coordinates><panel_attributes>Report(SendBase)
 --
 +lastSend: list
 +name: str

@@ -13,13 +13,15 @@ from enums import ReportState
 from report import Report
 from user import User
 import utils.logger as log
+
+
 SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
-
-
 LOGGER_NAME = "Scheduler"
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 
 SLEEP_TILL_NEXT_REQUEST = 40
+
+TESTING_ENABLED = True
 
 class Spreadsheet_report_app:
 
@@ -77,7 +79,9 @@ class Spreadsheet_report_app:
 	settings = dict()
 	settingsPath = ""
 	storagePath = "./state.json"
-
+	testing = True
+	timeTable = []
+	timeIndex = 0
 	users:dict[str, User] = {}
 	reports:dict[str, Report] = {}
 
@@ -90,6 +94,22 @@ class Spreadsheet_report_app:
 		self.logger.info("--------Init--------")
 
 		self.settingsPath = settingsPath
+
+		if TESTING_ENABLED:
+		
+			dateTimeStrFormat =  "%d-%m-%Y %H:%M:%S"
+			
+			#Initialize the timetable
+			with open("./testing/timetable.txt") as fp:
+				lines = fp.readlines()
+
+				for line in lines:
+
+					if line.strip() != "":
+						self.timeTable.append(datetime.strptime(line.replace("\n", ""), dateTimeStrFormat))
+					
+			print(self.timeTable)
+
 
 	def run(self, args) -> None:
 		"""
@@ -118,7 +138,7 @@ class Spreadsheet_report_app:
 
 			#Read the Settings file and validate it
 			self.logger.info("--------read the settings--------")
-			self.settings, _settingsAreValid = self.__readJSonFile(self.settingsPath, self.SETTINGS_SCHEME)
+			self.settings, _settingsAreValid = self._readJSonFile(self.settingsPath, self.SETTINGS_SCHEME)
 
 			#If Settings are valid we will read them and perform the actions
 			if _settingsAreValid:
@@ -141,11 +161,11 @@ class Spreadsheet_report_app:
 					if _reportObj.state == ReportState.IDLE:
 						
 						_reportObj.configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["eliona_handler"], reportConfig=_report)
-						_reportWasSend = _reportObj.wasReportSend(datetime.now())
+						_reportWasSend = _reportObj.wasReportSend(self._now())
 						
 						self.logger.debug(f"Report {_reportName} was already send : {_reportWasSend}")
 						if not _reportWasSend:
-							_reportObj.sendReport(year=datetime.now().year, month=datetime.now().month, sendAsync=True)
+							_reportObj.sendReport(year=self._now().year, month=self._now().month, sendAsync=True)
 
 
 				#Get through all the users
@@ -175,7 +195,7 @@ class Spreadsheet_report_app:
 			self.logger.debug(f"Sleep for {SLEEP_TILL_NEXT_REQUEST} seconds")
 			time.sleep(SLEEP_TILL_NEXT_REQUEST)
 
-	def __readJSonFile(self, settingsPath : str, settingsScheme:dict) -> tuple[dict, bool]:
+	def _readJSonFile(self, settingsPath : str, settingsScheme:dict) -> tuple[dict, bool]:
 		"""
 		# read the settings and store them in the class variables
 
@@ -194,7 +214,7 @@ class Spreadsheet_report_app:
 				settingsJson = json.load(settingsFile)
 
 			#Check if validate
-			_settingIsValid = self.__validateJson(settingsFile, settingsScheme)
+			_settingIsValid = self._validateJson(settingsFile, settingsScheme)
 
 			if _settingIsValid:
 				self.logger.debug(f"File: {settingsPath} read data's are valid.")			
@@ -203,7 +223,7 @@ class Spreadsheet_report_app:
 
 		return settingsJson, _settingIsValid
 	
-	def __validateJson(self, jsonData:dict, jsonScheme:dict) -> bool:
+	def _validateJson(self, jsonData:dict, jsonScheme:dict) -> bool:
 		"""
 		Validate the json file.Will be checked with a given scheme
 		WIll check if attributes with correct types are available
@@ -229,10 +249,44 @@ class Spreadsheet_report_app:
 
 		return _retVal
 
+	def _now(self)->datetime:
+		"""
+		Returns the current timestamp
+
+		Return
+		------
+		->dateTime 	= Will return the current datetime unless self.testing is active. There fore the return value is defined in a time table 
+		"""
+		if self.testing:
+			return self._backToTheFuture()
+		else:
+			return datetime.now()		
+
+	def _backToTheFuture(self)->datetime:
+		"""
+		Will handle Timing for test purposes
+
+		For each Tick will return an different Timestamp to handle past time reports
+
+		Return
+		------
+		->dateTime 	= Will return the current datetime unless self.testing is active. There fore the return value is defined in a time table 
+
+		"""
+
+		dateTimeStrFormat = "%Y-%m-%d"
+		if self.timeIndex >= len(self.timeTable):
+			self.timeIndex = len(self.timeTable) -1
+			
+		_lastSendTimeStamp = self.timeTable[self.timeIndex]
+
+		self.timeIndex += 1
+		return _lastSendTimeStamp
+
 if __name__ == "__main__":
 	"""
 	Main entry point
-	"""	
+	"""
 
 	mainApp = Spreadsheet_report_app( SETTINGS_PATH)
 	mainApp.run(sys.argv)
