@@ -146,23 +146,6 @@ class Mail:
 		return _mailSendSuccessfully
 
 
-	def _sendMailThread(self, config:dict) -> None:
-		"""
-		Send the mail as a thread and check the state till mail was send after sheduled time reached
-
-		Param
-		-----
-		config:dict = Configuration of the mail receiver and sender 
-
-		Return
-		-----
-		-> None
-		"""
-
-
-		pass
-
-
 	def _readAttachments(self, attachments:list)->list:
 		"""
 		Read the attachments and transform them to an base64 based string
