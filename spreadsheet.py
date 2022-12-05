@@ -1,7 +1,4 @@
-import sys
 import json
-import logging
-import time
 import pandas as pd
 import shutil
 import utils.logger as log
@@ -15,7 +12,6 @@ LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 class Spreadsheet:
 
 	logger = log.createLogger(LOGGER_NAME, loglevel=LOGGER_LEVEL)
-	INT_DEBUG_DEPTH = 10
 
 	def __init__(self, logLevel:int=log.LOG_LEVEL_DEBUG) -> None:
 		"""
@@ -23,7 +19,7 @@ class Spreadsheet:
 		"""
 
 		self.reportFilePath = ""
-		self.logger = log.createLogger(LOGGER_NAME, loglevel=logLevel)
+		#self.logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=logLevel)
 
 	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict, reportFilePath:str) -> bool:
 		"""

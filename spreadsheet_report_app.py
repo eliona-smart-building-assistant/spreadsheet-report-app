@@ -19,7 +19,7 @@ SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
 LOGGER_NAME = "Scheduler"
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 
-SLEEP_TILL_NEXT_REQUEST = 40
+SLEEP_TILL_NEXT_REQUEST = 1
 
 TESTING_ENABLED = True
 
@@ -107,9 +107,6 @@ class Spreadsheet_report_app:
 
 					if line.strip() != "":
 						self.timeTable.append(datetime.strptime(line.replace("\n", ""), dateTimeStrFormat))
-					
-			print(self.timeTable)
-
 
 	def run(self, args) -> None:
 		"""
@@ -155,17 +152,20 @@ class Spreadsheet_report_app:
 
 					_reportObj = self.reports[_reportName]
 
-					self.logger.debug(f"State of report {_reportName} : {_reportObj.state}")
+					self.logger.debug(f"State of report {_reportName} : {self.reports[_reportName].state}")
 
 					#Only update the configuration if we are in idle
-					if _reportObj.state == ReportState.IDLE:
+					if self.reports[_reportName].state == ReportState.IDLE:
 						
-						_reportObj.configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["eliona_handler"], reportConfig=_report)
-						_reportWasSend = _reportObj.wasReportSend(self._now())
+						self.reports[_reportName].configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["mail"], reportConfig=_report)
+
+						_now = self._now()
+						self.logger.debug(f"current Timestamp: {_now}")
+						_reportWasSend = self.reports[_reportName].wasReportSend(_now)
 						
 						self.logger.debug(f"Report {_reportName} was already send : {_reportWasSend}")
 						if not _reportWasSend:
-							_reportObj.sendReport(year=self._now().year, month=self._now().month, sendAsync=True)
+							self.reports[_reportName].sendReport(year=_now.year, month=_now.month, sendAsync=False)
 
 
 				#Get through all the users
@@ -257,8 +257,19 @@ class Spreadsheet_report_app:
 		------
 		->dateTime 	= Will return the current datetime unless self.testing is active. There fore the return value is defined in a time table 
 		"""
+
 		if self.testing:
-			return self._backToTheFuture()
+			_timeStamp = self._backToTheFuture()
+			
+			for _reportKey in self.reports:
+				self.reports[_reportKey].testing = True
+				self.reports[_reportKey].currentTestTime = _timeStamp
+
+			for _userKey in self.users:
+				self.users[_userKey].testing = True
+				self.users[_userKey].currentTestTime = _timeStamp
+
+			return _timeStamp
 		else:
 			return datetime.now()		
 

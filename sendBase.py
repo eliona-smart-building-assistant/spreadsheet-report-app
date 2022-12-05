@@ -41,6 +41,8 @@ class SendBase:
 
 	reports = [] #List of the reports to be send
 
+	testing = True
+	currentTestTime:datetime
 
 	def __init__(self, name:str, logLevel:int) -> None:
 		"""
@@ -168,6 +170,8 @@ class SendBase:
 		#Get the start and stop time
 		startStamp, stopStamp = self._getReportTimeSpan(schedule=_schedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
+		self.state = ReportState.CREATING
+		self._process(startStamp, stopStamp)
 		_thread = Thread(target=self._process, args=(startStamp, stopStamp))
 		_thread.start()
 
@@ -183,12 +187,12 @@ class SendBase:
 
 		#Create the report
 		for _report in self.reports:
-			self._createReport(report=_report, startStamp=startStamp, stopStamp=stopStamp)
+			self._create(report=_report, startStamp=startStamp, stopStamp=stopStamp)
 
 		#Send the mail
-		_feedback = self._sendReport(self,mailConfig=self.mailConfig, reports=self.reports)
+		self._send()
 
-	def _createReport(self, report:dict, startStamp:datetime, stopStamp:datetime) -> bool:
+	def _create(self, report:dict, startStamp:datetime, stopStamp:datetime) -> bool:
 		"""
 		Call the reporter object with the requested settings and TimeSpan
 
@@ -216,7 +220,7 @@ class SendBase:
 
 		return _reportSendFeedBack
 
-	def _sendReport(self, mailConfig:dict, reports:list):
+	def _send(self):
 		"""
 		Send the created reports to the configured receivers
 		
@@ -230,8 +234,11 @@ class SendBase:
 		
 		"""
 
+		print("Mail config:")
+		print(self.mailConfig)
+		print()
 		self.state = ReportState.SENDING
-		_mailState = self.mailHandler.sendMail(connection=self.elionaConfig, sender=mailConfig["sender"], reports=reports)
+		_mailState = self.mailHandler.sendMail(connection=self.elionaConfig, sender=self.mailConfig["sender"], reports=self.reports)
 
 		if _mailState:
 
@@ -250,7 +257,11 @@ class SendBase:
 				jsonFile.truncate() # remove the "old" overlapping data
 		else:
 			self.state = ReportState.CANCELED
-				
+
+		if self.testing:
+			self.lastSend = self.currentTestTime
+			self.state = ReportState.IDLE
+
 	def _getReportTimeSpan(self, schedule:Schedule, utcDelta:int, year:int, month:int=1) -> Tuple:
 		"""
 		Will return the last time span depending on the schedule settings

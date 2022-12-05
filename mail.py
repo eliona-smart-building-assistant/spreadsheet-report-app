@@ -13,6 +13,7 @@ from eliona.api_client.model.message import Message
 
 
 LOGGER_NAME = "mail"
+LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 
 class Mail:
 	"""
@@ -22,7 +23,7 @@ class Mail:
 	Will async report about the state
 	"""
 
-	logger = None
+	logger = log.createLogger(LOGGER_NAME, loglevel=LOGGER_LEVEL)
 	state = ReportState.IDLE
 	sendDate = datetime(1990,1,1)
 	config = {}

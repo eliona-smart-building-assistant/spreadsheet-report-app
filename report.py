@@ -22,7 +22,8 @@ class Report(SendBase):
 	def configure(self, elionaConfig:dict, mailConfig:dict, reportConfig:dict={}, userConfig:dict={})->bool:
 
 		self.reportConfig = reportConfig
+		self.reports = []
 		self.reports.append(self.reportConfig)
 
-		return super().configure(elionaConfig, mailConfig)
+		return super().configure(elionaConfig=elionaConfig, mailConfig=mailConfig)
 	
