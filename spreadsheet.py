@@ -8,6 +8,7 @@ from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
 LOGGER_NAME = "Spreadsheet"
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
+FILL_UP = True #If true will first fill up with heading and then tailing none lines
 
 class Spreadsheet:
 
@@ -58,8 +59,10 @@ class Spreadsheet:
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			elif reportSettings["type"] == "DataEntry":
+				startDt = endDt - timedelta(days=1)
 				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
-			
+			else:
+				self.logger.error(f"Invalid report configuration: reports['type']={reportSettings['type']}")
 		else:
 			self.logger.info("Connection not possible. Will try again.")
 
@@ -82,6 +85,9 @@ class Spreadsheet:
 		_dataTable = self.__readTableTemplate(settings=settings)
 
 		for _rowIndex, _row in _dataTable.iterrows(): #iterate over rows
+
+			_timeStampFormat = ""
+
 			for _columnIndex, _value in _row.items():
 
 				#Search for json config
@@ -94,24 +100,45 @@ class Spreadsheet:
 						_config = {}
 						#self.logger.exception("Config could not be loaded from cell.")
 
-					if ("assetId" in _config) and ("attribute" in _config):
+					if ("timeStampStart" in _config):
+					
+						_timeStampFormat = _config["timeStampStart"]
+						_dataTable.at[_rowIndex, _columnIndex] = startDateTime.strftime(_timeStampFormat)
 
-						_endTimeOffset = timedelta(seconds=1)
+					elif ("timeStampEnd" in _config):
+
+						_timeStampFormat = _config["timeStampEnd"]
+						_dataTable.at[_rowIndex, _columnIndex] = endDateTime.strftime(_timeStampFormat)
+
+					elif ("assetId" in _config) and ("attribute" in _config):
+
+						_timeStampFormat = "%Y-%m-%d %H:%M:%S"
+						_endTimeOffset = timedelta(days=1)
 
 						#self.logger.debug("Table config found: " + str(_config))
-						_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
+						_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																					assetId=int(_config["assetId"]), 
 																					attribute=str(_config["attribute"]), 
 																					startDateTime=startDateTime, 
 																					endDateTime=endDateTime +_endTimeOffset,
 																					raster=_config["raster"],
-																					mode=_config["mode"])
+																					mode=_config["mode"],
+																					timeStampKey="TimeStamp",
+																					valueKey="Value")
 
 						self.logger.debug(_data)
 
-						#Try to get the Data
-						if endDateTime in _data:
-							_dataTable.at[_rowIndex, _columnIndex] = _data[endDateTime]
+						#Set the TimeStamp straight
+						_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
+
+						#Just get the right timestamp
+						_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == endDateTime.strftime(_timeStampFormat) )]
+
+						#Set the Value to the Spreadsheet cell
+						if(_dataFrame.size > 0):
+							_dataTable.at[_rowIndex, _columnIndex] = _dataFrame.at[0,"Value"]
+
+
 
 		#Write the Data to the 
 		if _correctTimestamps:
@@ -139,6 +166,8 @@ class Spreadsheet:
 
 		#Read the template 
 		_dataTable = self.__readTableTemplate(settings=settings)
+
+		print(_dataTable)
 
 		#Read the configuration from the template
 		_configDict = {}
@@ -178,50 +207,47 @@ class Spreadsheet:
 					self.logger.error("No valid time span found")
 					exit()
 				
-				#Set the time column
-				_writeTimeRow = True
-				_row = _firstRow
-				_count = 0
-				while _writeTimeRow:
+				#Create the time column with the required timestamp
+				_timeStampList = []
+				_timeStamp = startDateTime
+				while (_timeStamp <= endDateTime):
 					 
-					_dataTable.at[_row, _columnName] = (startDateTime + (_count * timeTick))
-					_row = _row + 1
-					_count = _count + 1
+					#_timeStamp = _timeStamp + timeTick
+					_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
+					_timeStamp = _timeStamp + timeTick
 
-					if startDateTime + (_count * timeTick) > endDateTime:
-						_writeTimeRow = False
-
+				#Create the DataFrame for the readed Data
+				_dataTable = pd.DataFrame( _timeStampList, columns=[_timeStampColumnName])
 
 			elif (("assetId" in _configDict[_columnName])  
 					and ("attribute" in _configDict[_columnName]) 
 					and ("mode" in _configDict[_columnName])):
 				
-				#self.logger.debug("Table config found: " + str(_config))
-				_data, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
+				_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																			assetId=int(_configDict[_columnName]["assetId"]), 
 																			attribute=str(_configDict[_columnName]["attribute"]), 
 																			startDateTime=startDateTime, 
 																			endDateTime=endDateTime,
 																			raster=_raster,
-																			mode=_configDict[_columnName]["mode"])
+																			mode=_configDict[_columnName]["mode"],
+																			timeStampKey = _timeStampColumnName,
+																			valueKey=_columnName)
 
-				self.logger.debug(_data)
+				#Convert the data with the right timestamp format
+				_dataFrame[_timeStampColumnName] = pd.to_datetime(arg=_dataFrame[_timeStampColumnName]).dt.strftime(_timeStampFormat)
 
-				for _rowIndex, _row in _dataTable.iterrows():
-					
-					#Search for the TimeStamp
-					if _row[_timeStampColumnName] in _data:
-						
-						#We found the timestamp. Lets write it to the data table
-						_dataTable.at[_rowIndex, _columnName] =_data[_dataTable.at[_rowIndex, _timeStampColumnName]]
-					else:
-						_dataTable.at[_rowIndex, _columnName] = "none"
-
+				#Merge the Aggregated data with the current dataframe
+				_dataTable = pd.merge(_dataTable, _dataFrame, how='left', on=_timeStampColumnName)
+				
 			else:
 				self.logger.error("No valid table configuration.")
 
-		#Switch the timestamp to the correct format
-		self.__formatTimeStampRow(data=_dataTable, timeStampKey=_timeStampColumnName, timeStampFormat=_timeStampFormat)
+		#Fill up the empty cells. First with the newer ones. In case the first row is empty we will also fill with the older ones up
+		if FILL_UP:
+			_dataTable = _dataTable.fillna(method="ffill")
+			_dataTable = _dataTable.fillna(method="bfill")
+
+		self.logger.debug(_dataTable)
 
 		#Write the data to file
 		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
@@ -240,11 +266,7 @@ class Spreadsheet:
 		self.logger.debug("Before timestamp change")
 		self.logger.debug(data)
 
-		#Change the date and time format like requested in the template
-		for _rowIndex, _row in data.iterrows():		
-			#_row[timeStampKey] = _row[timeStampKey].strftime(timeStampFormat)
-			data.at[_rowIndex, timeStampKey] = data.at[_rowIndex, timeStampKey].strftime(timeStampFormat)
-
+		data[timeStampKey] = pd.to_datetime(arg=data[timeStampKey]).dt.strftime(timeStampFormat)
 
 		self.logger.debug("After timestamp change:")
 		self.logger.debug(data)
@@ -290,7 +312,7 @@ class Spreadsheet:
 		return _fileWritten
 
 	def __getAggregatedDataList(self, eliona:ElionaApiHandler, assetId:int, attribute:str, startDateTime:datetime, 
-								endDateTime:datetime, raster:str, mode:str) -> tuple[dict|None, bool]:
+								endDateTime:datetime, raster:str, mode:str, timeStampKey:str, valueKey:str) -> tuple[dict|None, pd.DataFrame|None, bool]:
 		"""
 		Get an attribute value from the given time span with tick
 		Will return an dictionary with time stamp as key
@@ -312,6 +334,9 @@ class Spreadsheet:
 		#Create the return value as a dictionary 
 		_dataSet = {}
 		_validKeys = True
+		_dataFrame = pd.DataFrame(columns=(timeStampKey, valueKey))
+
+		print(_dataFrame)
 
 		try:
 
@@ -320,8 +345,8 @@ class Spreadsheet:
 
 				
 			_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
-															from_date=startDateTime.isoformat(), 
-															to_date=endDateTime.isoformat(), 
+															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
+															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
 															data_subtype="input")
 
 			
@@ -331,7 +356,7 @@ class Spreadsheet:
 				#Get the requested data and aquisition mode
 				for _data in _retVal:
 
-					#Logg the received data
+					#Log the received data
 					#self.logger.debug(_data)
 
 					#write the info to the LOGGER
@@ -340,8 +365,9 @@ class Spreadsheet:
 						and (_data["raster"] == raster)
 						and mode in _data ):
 
-
 						_dataSet[_data["timestamp"]] = _data[mode]
+
+						_dataFrame = pd.concat([_dataFrame, pd.DataFrame([[_data["timestamp"], _data[mode]]], columns=(timeStampKey, valueKey))] )	
 
 						#self.logger.debug("Asset ID: " + str(assetId) + " // attribute: "+ str(attribute) 
 						#			+ " // raster: " + str(raster) + " // mode: " + str(mode))
@@ -349,6 +375,7 @@ class Spreadsheet:
 								str(_data["asset_id"]) + " // Attribute: " + str(_data["attribute"]) + 
 								" // Raster: " + str(_data["raster"]) + " // Value: " +str(_data[mode]))
 
+				print(_dataFrame)
 
 				#Validate the Data
 				_checkActive = False
@@ -356,15 +383,31 @@ class Spreadsheet:
 				_timeDelta = timedelta()
 				_missedTimeStamps =  "AssetId: " + str(assetId) +  " // Attribute: " + attribute + " // Missed time stamps: "
 
-				if raster.startswith("M"):
+		
+				if raster.find("DAY") != -1:
+
+					_checkActive = False
+
+				elif raster.find("MONTH") != -1:
+
+					_checkActive = False
+
+				elif raster.find("YEAR") != -1:
+
+					_checkActive = False
+
+				elif raster.startswith("M"):
+
 					_timeDelta = timedelta(minutes=int(raster.replace("M", "")))
 					_checkActive = True
 
 				elif raster.startswith("H"):
+
 					_timeDelta = timedelta(hours=int(raster.replace("H", "")))
 					_checkActive = True
 
 				elif raster.startswith("S"):
+
 					_timeDelta = timedelta(seconds=int(raster.replace("S", "")))
 					_checkActive = True
 
@@ -386,17 +429,17 @@ class Spreadsheet:
 					_currentTimeSpan = _currentTimeSpan + _timeDelta
 
 				if not _validKeys:
-					self.logger.error(_missedTimeStamps)
+					self.logger.error(f"Missed Timestamp: {_missedTimeStamps}")
 
 			# Reset valid keys if empty data was received
 			else:
 				_validKeys = False
 
-		except:
-			self.logger.exception("Exception getting aggregated data")
+		except Exception as err:
+			self.logger.exception("Exception getting aggregated data\n" + str(err))
 		
 		#Return the values
-		return (_dataSet, _validKeys)
+		return (_dataSet, _dataFrame, _validKeys)
 
 	def __getTrendDataList(self, eliona:ElionaApiHandler, assetId:int, attribute:str, startDateTime:datetime, endDateTime:datetime, 
 							tick:timedelta) -> dict|None:
@@ -430,7 +473,6 @@ class Spreadsheet:
 													to_date=endDateTime.isoformat(), 
 													data_subtype="input")
 
-			_count = 0
 			_timeA = startDateTime
 			_timeB = self.startDateTime +  tick
 			for dataEntry in _data:

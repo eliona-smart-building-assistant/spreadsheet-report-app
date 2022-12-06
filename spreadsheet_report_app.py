@@ -285,7 +285,6 @@ class Spreadsheet_report_app:
 
 		"""
 
-		dateTimeStrFormat = "%Y-%m-%d"
 		if self.timeIndex >= len(self.timeTable):
 			self.timeIndex = len(self.timeTable) -1
 			
