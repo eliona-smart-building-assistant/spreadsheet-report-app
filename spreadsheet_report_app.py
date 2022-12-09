@@ -169,25 +169,32 @@ class Spreadsheet_report_app:
 
 
 				#Get through all the users
-				"""for _report in self.settings["users"]:
+				for _user in self.settings["users"]:
+
+					_userName = _user["name"]
 
 					if not("name" in self.users):
 						#Create the report object if not already created
-						self.reports[_report["name"]] = User(name=_report["name"], logger=self.logger)
+						self.users[_userName] = User(name=_userName, logLevel=LOGGER_LEVEL)
 
-					_userObj = self.reports[_report["name"]]
+					_userObj = self.users[_userName]
 
-					
+					#Only update the configuration if we are in idle					
 					if _userObj.state == ReportState.IDLE:
-						#Only update the configuration if we are in idle
-						_userObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report, mailConfig=self.settings["eliona_handler"])
+
+						_userObj.configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["mail"], userConfig=_user)
+
+						_now = self._now()
+						self.logger.debug(f"current Timestamp: {_now}")
+						_reportWasSend = _userObj.wasReportSend(_now)
+						
+						self.logger.debug(f"Reports  for user: {_userName} was already send : {_reportWasSend}")
+						if not _reportWasSend:
+							_userObj.sendReport(year=_now.year, month=_now.month, sendAsync=False)
 
 						if _userObj.wasReportSend(datetime.now()):
 							_userObj.sendReport(year=datetime.now().year, month=datetime.now().month, sendAsync=True)
-				"""
-
-
-
+		
 			else:
 
 				self.logger.error("Skipped the Create report process due to errors in the settings")

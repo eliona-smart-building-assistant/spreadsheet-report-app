@@ -224,7 +224,7 @@ The data is configured with the needed _assetId_, the required _attribute_ the _
 |---|---|
 |assetId|The asset id as integer|
 |attribute|The Attribute from the asset as string|
-|raster|Set the raster of the pipeline. <br> - H1 (Hour) <br> - m1 (month) <br> - year (full year)|
+|raster|Set the raster of the pipeline. <br> - M15 (15 Minutes) <br> - H1 (Hour) <br> - MONTH (One Month) <br> - YEAR (full year)|
 |mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
 
 
