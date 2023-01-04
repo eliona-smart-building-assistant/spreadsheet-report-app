@@ -145,5 +145,10 @@ Documents/.DS_Store
 # Ignore the storeage of the allready send reports
 state.json
 
-
 __init__.py
+
+#Ignoring draw io temp files
+*.bkp
+
+# Ignore Testing files
+/testing

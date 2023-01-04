@@ -48,8 +48,6 @@ class Spreadsheet_report_app:
 					"type": {"type": "string"},
 					"templateFile": {"type": "string"},
 					"sheet": {"type": "string"},
-					"fileType": {"type": "string"},
-					"mimeType": {"type": "string"},
 					"separator":{"type": "string"},
 					"firstRow": {"type": "string"},
 					"fromTemplate": {"type": "boolean"},

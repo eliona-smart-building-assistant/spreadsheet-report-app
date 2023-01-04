@@ -282,9 +282,9 @@ class Spreadsheet:
 		"""
 
 		_fileWritten = False
-
+		_fileType = self.reportFilePath.split(".")[-1]
 		try:
-			if (settings["fileType"] == "xlsx") or (settings["fileType"] == "xls"):
+			if (_fileType == "xlsx") or (_fileType == "xls"):
 
 				with pd.ExcelWriter(path=(self.reportFilePath), mode="a", if_sheet_exists="overlay") as writer:
 					data.to_excel(writer, sheet_name= settings["sheet"], index=False)
@@ -292,7 +292,7 @@ class Spreadsheet:
 				# Write the file was successful
 				_fileWritten = True
 
-			elif (settings["fileType"] == "csv"):
+			elif (_fileType == "csv"):
 
 				_mode = ""
 				if settings["fromTemplate"]:

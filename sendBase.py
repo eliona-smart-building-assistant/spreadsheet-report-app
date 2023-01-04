@@ -208,7 +208,7 @@ class SendBase:
 
 		self.logger.info(f"Call the reporting function with start {startStamp} and end timestamp {stopStamp}")
 
-		_reportFileAndPath = TEMP_ATTACHMENT_PATH + report["reportPath"] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + report["fileType"]
+		_reportFileAndPath = TEMP_ATTACHMENT_PATH + report["reportPath"] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(report["reportPath"]).split(".")[-1]
 
 
 		#Call the reporting function

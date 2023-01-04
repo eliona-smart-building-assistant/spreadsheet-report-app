@@ -12,6 +12,8 @@ class ReportState(Enum):
 	SEND_SUCCESSFULLY = 50
 	CANCELED  = 100
 	
+	UNKNOWN = 500
+
 
 class Schedule(Enum):
 	"""
