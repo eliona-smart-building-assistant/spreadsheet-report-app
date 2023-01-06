@@ -1,27 +1,23 @@
 from calendar import month
 import os
+import traceback
 import sys
 import json
-import logging
 import time
 from typing import Tuple
 import jsonschema
-from spreadsheet import Spreadsheet
-from datetime import datetime, timedelta, date, timezone
-import pytz
+from datetime import datetime
 from enums import ReportState
-from report import Report
-from user import User
+from reporting import User, Report
 import utils.logger as log
 
 
 SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
 LOGGER_NAME = "Scheduler"
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
-
 SLEEP_TILL_NEXT_REQUEST = 1
-
 TESTING_ENABLED = True
+TEMP_ATTACHMENT_PATH = "./tmp_reports/send/"
 
 class Spreadsheet_report_app:
 
@@ -66,7 +62,7 @@ class Spreadsheet_report_app:
 				}]}
 
 	logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=LOGGER_LEVEL)
-	settings = dict()
+	settings = {}
 	settingsPath = ""
 	storagePath = "./state.json"
 	testing = True
@@ -140,7 +136,7 @@ class Spreadsheet_report_app:
 
 						if not(_reportName in self.reports):
 							#Create the report object if not already created
-							self.reports[_reportName] = Report(name=_reportName, logLevel=LOGGER_LEVEL)
+							self.reports[_reportName] = Report(name=_reportName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
 
 						_reportObj = self.reports[_reportName]
 
@@ -170,7 +166,7 @@ class Spreadsheet_report_app:
 
 						if not(_userName in self.users):
 							#Create the report object if not already created
-							self.users[_userName] = User(name=_userName, logLevel=LOGGER_LEVEL)
+							self.users[_userName] = User(name=_userName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
 
 						_userObj = self.users[_userName]
 
@@ -190,6 +186,10 @@ class Spreadsheet_report_app:
 			else:
 
 				self.logger.error("Skipped the Create report process due to errors in the settings")
+
+			#Check for files to delete
+			self._deleteOldTempFiles(path=TEMP_ATTACHMENT_PATH)
+
 
 			self.logger.debug(f"Sleep for {SLEEP_TILL_NEXT_REQUEST} seconds")
 			time.sleep(SLEEP_TILL_NEXT_REQUEST)
@@ -291,6 +291,34 @@ class Spreadsheet_report_app:
 
 		self.timeIndex += 1
 		return _lastSendTimeStamp
+
+	def _deleteOldTempFiles(self, path:str):
+		"""
+		Delete the old Template files by a given path
+
+		Param
+		----
+		path:str 	= Path of the files to be deleted.
+
+		"""
+
+		current_time = datetime.now()
+		
+		#Get all files
+		for file in os.listdir(path):
+
+			try:
+				file_path = os.path.join(path, file)
+
+				#Check if file is older then one year
+				if os.path.getctime(file_path) < current_time.timestamp() - (10 * 60): #365 * 24 * 60 * 60
+					
+					#Remove the file
+					os.remove(file_path)
+
+			except Exception as err:
+
+				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
 if __name__ == "__main__":
 	"""
