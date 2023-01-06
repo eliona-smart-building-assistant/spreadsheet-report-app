@@ -6,13 +6,7 @@
         "apiKey": "YOUR_ELIONA_API_KEY",
         "dbTimeZone": 2
     },
-    "mail": {
-        "sender" : "youMail@YourCompany.ch",
-        "template": {
-            "path" : "./tmp_reports/Cust_Config/mailTemplate.html",
-            "MimeType" : "text/html"
-        }
-    },
+    
     "reports": [
         {
             "name": "Report Name 001",
