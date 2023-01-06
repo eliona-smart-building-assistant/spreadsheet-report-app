@@ -4,19 +4,17 @@ import json
 from mail import Mail
 from spreadsheet import Spreadsheet
 from threading import Thread
-from enum import Enum
-from logging import Logger
-from datetime import datetime, timedelta, date, timezone
+from datetime import datetime, timedelta, timezone
 from enums import Schedule, ReportState
 from typing import Tuple
 import unicodedata
 import re
 import utils.logger as log
 
-TEMP_ATTACHMENT_PATH = "./tmp_reports/send/"
+
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 
-class SendBase:
+class BasicReport:
 	"""
 	Base class for the sender classes
 
@@ -88,10 +86,12 @@ class SendBase:
 		- DAILY = 3
 	"""
 
+	tempFilePath = ""
+
 	testing = True
 	currentTestTime:datetime
 
-	def __init__(self, name:str, logLevel:int) -> None:
+	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
 		"""
 		Init the class
 
@@ -110,6 +110,8 @@ class SendBase:
 
 		self.storePath = f"./tmp_reports/{_fileName}.json"
 		self.readStorage()
+		
+		self.tempFilePath = tempFilePath
 
 	def wasReportSend(self, timestamp:datetime)->bool:
 		"""
@@ -232,7 +234,7 @@ class SendBase:
 			else:
 				_reportName = _reportName + " " + _report["name"]
 
-			_report["tempPath" ] = TEMP_ATTACHMENT_PATH + str(_report["reportPath"]).split(".")[0] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
+			_report["tempPath" ] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
 
 
 		#Define the subject
@@ -408,3 +410,56 @@ class SendBase:
 			value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
 		value = re.sub(r'[^\w\s-]', '', value.lower())
 		return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+class User(BasicReport):
+	"""
+	Object to handle all reports for one user
+	"""
+
+	
+	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
+		"""
+		Initialise the object
+		"""
+		super().__init__(name, tempFilePath, logLevel)        
+		self.logger.debug("Init the user object")
+
+	def configure(self, elionaConfig:dict, userConfig:dict={})->bool:
+
+	
+		#Add the reports to the list
+		self.reports = userConfig["reports"]
+
+		#Add the user to the list
+		self.recipients = None
+		self.blindCopyRecipients = []
+		self.blindCopyRecipients.append(userConfig["msgEndpoint"])
+
+		return super().configure(elionaConfig=elionaConfig)
+
+class Report(BasicReport):
+	"""
+	Object to handle all reports for one user
+	"""
+
+	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
+		"""
+		Initialise the object
+		"""
+
+		super().__init__(name, tempFilePath, logLevel)        
+		self.logger.debug("Init the report object")
+
+	def configure(self, elionaConfig:dict, reportConfig:dict)->bool:
+
+		#Add the reports to the report list
+		self.reports = []
+		self.reports.append(reportConfig)
+
+		#Add the recipients to the list
+		self.recipients = []
+		for _recipient in reportConfig["receiver"]:
+			self.recipients.append(_recipient["msgEndpoint"]) 
+
+		return super().configure(elionaConfig=elionaConfig)
+	
