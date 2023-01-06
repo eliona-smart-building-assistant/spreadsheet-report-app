@@ -8,8 +8,6 @@ class User(SendBase):
 	Object to handle all reports for one user
 	"""
 
-	userMail = ""
-	userConfig = {}
 	
 	def __init__(self, name:str, logLevel:int) -> None:
 		"""
@@ -18,11 +16,15 @@ class User(SendBase):
 		super().__init__(name, logLevel)        
 		self.logger.debug("Init the user object")
 
-	def configure(self, elionaConfig:dict, mailConfig:dict, userConfig:dict={})->bool:
+	def configure(self, elionaConfig:dict, userConfig:dict={})->bool:
 
 	
-		#Object specific configuration
-		self.userConfig = userConfig 
-		self.reports.append(self.userConfig["reports"])
+		#Add the reports to the list
+		self.reports = userConfig["reports"]
 
-		return super().configure(elionaConfig, mailConfig)
+		#Add the user to the list
+		self.recipients = None
+		self.blindCopyRecipients = []
+		self.blindCopyRecipients.append(userConfig["msgEndpoint"])
+
+		return super().configure(elionaConfig=elionaConfig)

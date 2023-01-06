@@ -137,12 +137,13 @@ class Spreadsheet:
 						#Set the Value to the Spreadsheet cell
 						if(_dataFrame.size > 0):
 							_dataTable.at[_rowIndex, _columnIndex] = _dataFrame.at[0,"Value"]
+						else:
+							_dataTable.at[_rowIndex, _columnIndex] = "NAN"
 
 
 
 		#Write the Data to the 
-		if _correctTimestamps:
-			_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
+		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
 
 		return _reportCreated
 

@@ -26,20 +26,67 @@ class SendBase:
 	name=""
 
 	logger = log.createLogger("BASE Send class", loglevel=LOGGER_LEVEL)
+	"""
+	Logger fo the sending class
+	"""
+
 	state = ReportState.IDLE
+	"""
+	Current state of the report:
+		- IDLE = 0
+		- CREATING = 1
+		- SENDING = 30
+		- SEND_SUCCESSFULLY = 50
+		- CANCELED  = 100
+		- UNKNOWN = 500
+	"""
+
 	lastSend:datetime = datetime(1979, 1, 1)
+	"""
+	Date of the last send message. Will be 1979.1.1 if never send
+	"""
 
 	storePath = "./tmp_reports/"
+	"""
+	Path to save the temp files to 
+	"""
 
-	reportConfig = {}
-	elionaConfig = {} #Eliona connection settings
-	mailConfig = {}
-	userConfig = {}
+	elionaConfig = {}
+	"""
+	Eliona connection settings
+	"""
 
-	messageData = None
-	mailHandler = Mail()
+	recipients = []
+	"""
+	List of the recipients to send the mail to.
+	"""
 
-	reports = [] #List of the reports to be send
+	blindCopyRecipients = []
+	"""
+	List of the blind copy recipients to send the mail to.
+	"""
+
+	reports = []
+	"""
+	List of the reports to be send
+	report is an dictionary with these required key's
+		- "name": "Name of the report",
+		- "reportPath": "Path of the Report file",
+	"""
+
+	mailHandler = None
+	"""
+	Handler to send mails and check the mail state
+	"""
+
+	reportSchedule = Schedule.MONTHLY
+	"""
+	Schedule of the report:
+		- YEARLY = 0,
+		- MONTHLY = 1,
+		- WEEKLY = 2,
+		- DAILY = 3
+	"""
 
 	testing = True
 	currentTestTime:datetime
@@ -123,7 +170,7 @@ class SendBase:
 
 		return _reportWasSend
 
-	def configure(self, elionaConfig:dict, mailConfig:dict)->bool:
+	def configure(self, elionaConfig:dict)->bool:
 		"""
 		Configure the object
 
@@ -141,17 +188,20 @@ class SendBase:
 
 		# Configure the object		
 		self.elionaConfig = elionaConfig
-		self.mailConfig = mailConfig
 		_configState = True
 
 		return _configState
 
-	def sendReport(self, year:int, month:int=0, sendAsync:bool=True) -> None:
+	def sendReport(self, year:int, month:int=0, sendAsync:bool=True, subject:str="", content:str="", ) -> None:
 		"""
 		Create and send the report.
 
 		Params
 		------
+		subject:str			= Subject of the mail
+		content				= Content of the mail
+		year:int			= Year of the requested report
+		month:int			= Month of the requested report. If 0 => Yearly report will be created
 		sendAsync:bool		= Set to True if you want to send it asynchronous
 									to False if you want to send it now and wait for it to be send
 
@@ -160,19 +210,47 @@ class SendBase:
 		->None				= No returns 											
 		"""
 
+
 		#get the start and stop date
 		if month == 0:
-			_schedule = Schedule.YEARLY
+			self.reportSchedule = Schedule.YEARLY
 			month = 1
 		else:
-			_schedule = Schedule.MONTHLY
+			self.reportSchedule = Schedule.MONTHLY
 
 		#Get the start and stop time
-		startStamp, stopStamp = self._getReportTimeSpan(schedule=_schedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
+		startStamp, stopStamp = self._getReportTimeSpan(schedule=self.reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
+
+
+		#Define the report name's 
+		_reportName = ""
+		for _report in self.reports:
+
+			#Define the report name
+			if _reportName == "":
+				_reportName = _report["name"]
+			else:
+				_reportName = _reportName + " " + _report["name"]
+
+			_report["tempPath" ] = TEMP_ATTACHMENT_PATH + str(_report["reportPath"]).split(".")[0] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
+
+
+		#Define the subject
+		if subject == "":
+			_subject = f"Report ({_reportName}) von {startStamp} bis {stopStamp}"
+		else:
+			_subject = subject
+
+		#Define the content
+		if content == "":
+			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {startStamp} bis zum {stopStamp}.<br>"
+			_content = _content + "Alle weiteren Informationen sind in den Reports enthalten."
+		else:
+			_content = content
+
 
 		self.state = ReportState.CREATING
-		self._process(startStamp, stopStamp)
-		_thread = Thread(target=self._process, args=(startStamp, stopStamp))
+		_thread = Thread(target=self._process, args=(startStamp, stopStamp, _subject, _content))
 		_thread.start()
 
 		if not sendAsync:
@@ -180,7 +258,7 @@ class SendBase:
 			#if not send async wait till done
 			_thread.join()
 
-	def _process(self, startStamp:datetime, stopStamp:datetime):
+	def _process(self, startStamp:datetime, stopStamp:datetime, subject:str, content:str):
 		"""
 		Thread to create and send the Report
 		"""
@@ -190,7 +268,7 @@ class SendBase:
 			self._create(report=_report, startStamp=startStamp, stopStamp=stopStamp)
 
 		#Send the mail
-		self._send()
+		self._send(subject, content)
 
 	def _create(self, report:dict, startStamp:datetime, stopStamp:datetime) -> bool:
 		"""
@@ -208,7 +286,7 @@ class SendBase:
 
 		self.logger.info(f"Call the reporting function with start {startStamp} and end timestamp {stopStamp}")
 
-		_reportFileAndPath = TEMP_ATTACHMENT_PATH + report["reportPath"] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+		_reportFileAndPath = report["tempPath" ] #TEMP_ATTACHMENT_PATH + str(report["reportPath"]) + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(report["reportPath"]).split(".")[-1]
 
 
 		#Call the reporting function
@@ -220,13 +298,15 @@ class SendBase:
 
 		return _reportSendFeedBack
 
-	def _send(self):
+	def _send(self, subject:str, content:str):
 		"""
 		Send the created reports to the configured receivers
 		
 		Params
 		-----
-		report:dict = Report settings as a dictionary
+		report:dict 			= Report settings as a dictionary
+		startStamp:datetime 	= Start timestamp
+		stopStamp:datetime		= Stop timestamp
 
 		Return Values
 		-----
@@ -234,11 +314,13 @@ class SendBase:
 		
 		"""
 
-		print("Mail config:")
-		print(self.mailConfig)
-		print()
 		self.state = ReportState.SENDING
-		_mailState = self.mailHandler.sendMail(connection=self.elionaConfig, sender=self.mailConfig["sender"], reports=self.reports)
+		_mailState = self.mailHandler.sendMail(	connection=self.elionaConfig, 
+												subject=subject, 
+												content=content, 
+												receiver=self.recipients,
+												blindCopyReceiver=self.blindCopyRecipients,
+												reports=self.reports)
 
 		if _mailState:
 
@@ -262,7 +344,7 @@ class SendBase:
 			self.lastSend = self.currentTestTime
 			self.state = ReportState.IDLE
 
-	def _getReportTimeSpan(self, schedule:Schedule, utcDelta:int, year:int, month:int=1) -> Tuple:
+	def _getReportTimeSpan(self, schedule:Schedule, utcDelta:int, year:int, month:int=1) -> Tuple[datetime, datetime]:
 		"""
 		Will return the last time span depending on the schedule settings
 
@@ -277,8 +359,8 @@ class SendBase:
 
 		"""
 
-		_startTime = None
-		_endTime = None
+		_startTime = datetime(1979, 1, 1)
+		_endTime = datetime(1979, 1, 1)
 		_timeZone = timezone(timedelta(hours=utcDelta), "BER")
 
 

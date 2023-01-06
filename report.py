@@ -8,9 +8,6 @@ class Report(SendBase):
 	Object to handle all reports for one user
 	"""
 
-	reportSchedule = Schedule.MONTHLY
-	reportConfig = {}
-
 	def __init__(self, name:str, logLevel:int) -> None:
 		"""
 		Initialise the object
@@ -19,11 +16,16 @@ class Report(SendBase):
 		super().__init__(name, logLevel)        
 		self.logger.debug("Init the report object")
 
-	def configure(self, elionaConfig:dict, mailConfig:dict, reportConfig:dict={}, userConfig:dict={})->bool:
+	def configure(self, elionaConfig:dict, reportConfig:dict)->bool:
 
-		self.reportConfig = reportConfig
+		#Add the reports to the report list
 		self.reports = []
-		self.reports.append(self.reportConfig)
+		self.reports.append(reportConfig)
 
-		return super().configure(elionaConfig=elionaConfig, mailConfig=mailConfig)
+		#Add the recipients to the list
+		self.recipients = []
+		for _recipient in reportConfig["receiver"]:
+			self.recipients.append(_recipient["msgEndpoint"]) 
+
+		return super().configure(elionaConfig=elionaConfig)
 	

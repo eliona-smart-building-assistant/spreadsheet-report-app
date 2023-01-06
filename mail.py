@@ -1,5 +1,5 @@
 import os
-import sys
+import traceback
 import json
 import time
 from enum import Enum
@@ -37,7 +37,7 @@ class Mail:
 		"""
 		self.logger = log.createLogger(LOGGER_NAME, loglevel=logLevel)
 
-	def sendMail(self, connection:dict, subject:str, content:str, receiver:list, attachments:list=None, reports:list=None) -> bool:
+	def sendMail(self, connection:dict, subject:str, content:str, receiver:list, blindCopyReceiver:list=None, attachments:list=None, reports:list=None) -> bool:
 		"""
 		Sending mail with the api V" to connect the 
 
@@ -69,14 +69,11 @@ class Mail:
 				#Iterate through all reports
 				for _report in reports:
 
-					# Add the receivers
-					for _receiver in _report["receiver"]:
-						_receiverList.append(_receiver["msgEndpoint"])
-
 					#Add the Attachments
 					_attachment = {}
 					_attachment["path"] = _report["reportPath"]
 					_attachment["name"] = str(_report["reportPath"]).split("/")[-1]	
+					_attachment["tempPath"] = _report["tempPath"]
 					_attachmentsList.append(_attachment)
 
 				_attachments = self._readAttachments(attachments=_attachmentsList)
@@ -100,7 +97,11 @@ class Mail:
 				self.logger.info(f"Send mail with Subject: {subject}")
 
 				self.state = ReportState.SENDING
-				_response, errMsg = eliona.send_mail(subject=subject, content=content, recipients=receiver, attachments=_attachments)
+				_response, errMsg = eliona.send_mail(	subject=subject, 
+														content=content, 
+														recipients=receiver, 
+														attachments=_attachments, 
+														blind_copy_recipients=blindCopyReceiver)
 
 
 				#Wait till the mail was send 		
@@ -135,12 +136,13 @@ class Mail:
 			else:
 				self.logger.info("Connection not possible. Will try again.")
 
-		except EmailNotValidError as e:
-			self.logger.error("Invalid email\n" + e) #Print the error
-		except:
-			e = sys.exc_info()[0] #Get the error
-			self.logger.error(e) #Print the error
-			_mailSendSuccessfully = False
+		except EmailNotValidError as err:
+			self.logger.error("Invalid email\n" + err) #Print the error
+			self.logger.error(traceback.format_exc())
+
+		except Exception as err:
+			self.logger.error(err) #Print the error
+			self.logger.error(traceback.format_exc())
 
 		return _mailSendSuccessfully
 
@@ -190,7 +192,7 @@ class Mail:
 
 		Param
 		-----
-		attachments:list = Attachments as a dict with: _["path"], _["name], _["contentType], _["content"]
+		attachments:list = Attachments as a dict with: _["path"], _["name], _["contentType], _["content"] _["tempPath"]
 
 		Return
 		-----
@@ -203,7 +205,7 @@ class Mail:
 		#Iterate through all attachments and try to convert them to a base64 string 
 		for _attachment in _attachmentBase64:
 			
-			_filePath = str(_attachment["path"])
+			_filePath = str(_attachment["tempPath"])
 
 			#Get the File and mime type
 			_fileType = _filePath.split(".")[-1]

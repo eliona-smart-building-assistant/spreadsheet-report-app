@@ -4,7 +4,7 @@ import sys
 import json
 import logging
 import time
-from typing import Tuple, Dict
+from typing import Tuple
 import jsonschema
 from spreadsheet import Spreadsheet
 from datetime import datetime, timedelta, date, timezone
@@ -31,14 +31,6 @@ class Spreadsheet_report_app:
 				"api": {"type": "string"},
 				"projectId": {"type": "number"},
 				"apiKey": {"type": "string"}
-			},
-
-			"mail": {
-				"sender" : {"type", "string"},
-				"template": {
-					"path" : {"type", "string"},
-					"MimeType" : {"type", "string"}
-				}
 			},
 
 			"reports": [
@@ -138,61 +130,63 @@ class Spreadsheet_report_app:
 			#If Settings are valid we will read them and perform the actions
 			if _settingsAreValid:
 
+				#Check if the report based reports are available
+				if "reports" in self.settings:
 
-				#Get through all the reports
-				for _report in self.settings["reports"]:
-					
-					_reportName = _report["name"]
-
-					if not(_reportName in self.reports):
-						#Create the report object if not already created
-						self.reports[_reportName] = Report(name=_reportName, logLevel=LOGGER_LEVEL)
-
-					_reportObj = self.reports[_reportName]
-
-					self.logger.debug(f"State of report {_reportName} : {self.reports[_reportName].state}")
-
-					#Only update the configuration if we are in idle
-					if self.reports[_reportName].state == ReportState.IDLE:
+					#Get through all the reports
+					for _report in self.settings["reports"]:
 						
-						self.reports[_reportName].configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["mail"], reportConfig=_report)
+						_reportName = _report["name"]
 
-						_now = self._now()
-						self.logger.debug(f"current Timestamp: {_now}")
-						_reportWasSend = self.reports[_reportName].wasReportSend(_now)
-						
-						self.logger.debug(f"Report {_reportName} was already send : {_reportWasSend}")
-						if not _reportWasSend:
-							self.reports[_reportName].sendReport(year=_now.year, month=_now.month, sendAsync=False)
+						if not(_reportName in self.reports):
+							#Create the report object if not already created
+							self.reports[_reportName] = Report(name=_reportName, logLevel=LOGGER_LEVEL)
+
+						_reportObj = self.reports[_reportName]
+
+						self.logger.debug(f"State of report {_reportName} : {self.reports[_reportName].state}")
+
+						#Only update the configuration if we are in idle
+						if self.reports[_reportName].state == ReportState.IDLE:
+							
+							self.reports[_reportName].configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report)
+
+							_now = self._now()
+							self.logger.debug(f"current Timestamp: {_now}")
+							_reportWasSend = self.reports[_reportName].wasReportSend(_now)
+							
+							self.logger.debug(f"Report {_reportName} was already send : {_reportWasSend}")
+							if not _reportWasSend:
+								self.reports[_reportName].sendReport(year=_now.year, month=_now.month, sendAsync=False)
 
 
-				#Get through all the users
-				for _user in self.settings["users"]:
+				#Check if user based reports are available
+				if "users" in self.settings:
 
-					_userName = _user["name"]
+					#Get through all the users
+					for _user in self.settings["users"]:
 
-					if not("name" in self.users):
-						#Create the report object if not already created
-						self.users[_userName] = User(name=_userName, logLevel=LOGGER_LEVEL)
+						_userName = _user["name"]
 
-					_userObj = self.users[_userName]
+						if not(_userName in self.users):
+							#Create the report object if not already created
+							self.users[_userName] = User(name=_userName, logLevel=LOGGER_LEVEL)
 
-					#Only update the configuration if we are in idle					
-					if _userObj.state == ReportState.IDLE:
+						_userObj = self.users[_userName]
 
-						_userObj.configure(elionaConfig=self.settings["eliona_handler"], mailConfig=self.settings["mail"], userConfig=_user)
+						#Only update the configuration if we are in idle					
+						if _userObj.state == ReportState.IDLE:
 
-						_now = self._now()
-						self.logger.debug(f"current Timestamp: {_now}")
-						_reportWasSend = _userObj.wasReportSend(_now)
-						
-						self.logger.debug(f"Reports  for user: {_userName} was already send : {_reportWasSend}")
-						if not _reportWasSend:
-							_userObj.sendReport(year=_now.year, month=_now.month, sendAsync=False)
+							_userObj.configure(elionaConfig=self.settings["eliona_handler"], userConfig=_user)
 
-						if _userObj.wasReportSend(datetime.now()):
-							_userObj.sendReport(year=datetime.now().year, month=datetime.now().month, sendAsync=True)
-		
+							_now = self._now()
+							self.logger.debug(f"current Timestamp: {_now}")
+							_reportWasSend = _userObj.wasReportSend(_now)
+							
+							self.logger.debug(f"Reports  for user: {_userName} was already send : {_reportWasSend}")
+							if not _reportWasSend:
+								_userObj.sendReport(year=_now.year, month=_now.month, sendAsync=False)
+
 			else:
 
 				self.logger.error("Skipped the Create report process due to errors in the settings")
@@ -200,7 +194,7 @@ class Spreadsheet_report_app:
 			self.logger.debug(f"Sleep for {SLEEP_TILL_NEXT_REQUEST} seconds")
 			time.sleep(SLEEP_TILL_NEXT_REQUEST)
 
-	def _readJSonFile(self, settingsPath : str, settingsScheme:dict) -> tuple[dict, bool]:
+	def _readJSonFile(self, settingsPath : str, settingsScheme:dict) -> Tuple[dict, bool]:
 		"""
 		# read the settings and store them in the class variables
 
