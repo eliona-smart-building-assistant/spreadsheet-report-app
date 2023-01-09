@@ -59,7 +59,7 @@ class Spreadsheet:
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			elif reportSettings["type"] == "DataEntry":
-				startDt = endDt - timedelta(days=1)
+				#startDt = endDt - timedelta(days=1)
 				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			else:
 				self.logger.error(f"Invalid report configuration: reports['type']={reportSettings['type']}")
@@ -108,7 +108,7 @@ class Spreadsheet:
 					elif ("timeStampEnd" in _config):
 
 						_timeStampFormat = _config["timeStampEnd"]
-						_dataTable.at[_rowIndex, _columnIndex] = endDateTime.strftime(_timeStampFormat)
+						_dataTable.at[_rowIndex, _columnIndex] = (endDateTime- timedelta(days=1)).strftime(_timeStampFormat)
 
 					elif ("assetId" in _config) and ("attribute" in _config):
 
@@ -119,7 +119,7 @@ class Spreadsheet:
 						_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																					assetId=int(_config["assetId"]), 
 																					attribute=str(_config["attribute"]), 
-																					startDateTime=startDateTime, 
+																					startDateTime=endDateTime - timedelta(days=1), 
 																					endDateTime=endDateTime +_endTimeOffset,
 																					raster=_config["raster"],
 																					mode=_config["mode"],
