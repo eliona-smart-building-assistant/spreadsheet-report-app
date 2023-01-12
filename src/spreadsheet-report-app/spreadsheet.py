@@ -1,3 +1,5 @@
+import os
+import argparse
 import json
 import pandas as pd
 import shutil
@@ -22,7 +24,7 @@ class Spreadsheet:
 		self.reportFilePath = ""
 		#self.logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=logLevel)
 
-	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict, reportFilePath:str) -> bool:
+	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict) -> bool:
 		"""
 		Create the requested report
 
@@ -39,7 +41,7 @@ class Spreadsheet:
 
 		"""
 
-		self.reportFilePath = reportFilePath
+		self.reportFilePath = reportSettings["tempPath" ]
 
 		#set the local variables
 		_reportCreatedSuccessfully = False
@@ -538,17 +540,3 @@ class Spreadsheet:
 		#Return the _template
 		return _template
 
-
-if __name__ == "__main__":
-	"""
-	Main entry point
-	"""
-
-	 #from_date="2022-07-01T00:00:00+02:00", to_date="2022-07-01T01:00:00+02:00"
-	_start = datetime.fromisoformat("2022-10-02T00:00:00+02:00")
-	_end = datetime.fromisoformat("2022-10-03T00:00:00+02:00")
-	_settingsPath = "./tmp_reports/Cust_Config/config.json"
-
-	#karlaKolumna = Spreadsheet()
-	#karlaKolumna.createReport(_start, _end, _settingsPath)
-	

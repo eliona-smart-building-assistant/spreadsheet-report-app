@@ -1,4 +1,4 @@
-from calendar import month
+import argparse
 import os
 import traceback
 import sys
@@ -320,11 +320,93 @@ class Spreadsheet_report_app:
 
 				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
+	def _singleExport(self, arguments):
+
+		#Try to get the arguments
+		try:
+			_reportName = arguments.report
+			_userName = arguments.user
+			_date = datetime.strptime(arguments.date, "%d.%m.%Y").date()
+			_configPath = arguments.config
+			_outputPath = arguments.output
+
+		except Exception as err:
+			print("Error occurred reading the arguments. Enter -h or --help to get a help for the arguments.")
+			print(str(err))
+			exit()
+
+
+		#Set the config path
+		if _configPath == None:
+			_configPath = SETTINGS_PATH
+
+		#Read the settings file
+		_settingsJson = {}
+		if os.path.isfile(_configPath):
+
+			#Read the configuration file 
+			with open(_configPath, "r") as settingsFile:
+				_settingsJson = json.load(settingsFile)
+
+		#Set the Output path
+		if _outputPath == None:
+			_outputPath = "./tmp_reports/manual_created/"
+
+
+		#Get the reports
+		if _userName != None:
+
+			#Get the requested user			
+			for _user in _settingsJson["users"]:
+
+				if _userName == _user["name"]: 				
+
+					_userObj = User(name=_userName, tempFilePath=_outputPath, logLevel=LOGGER_LEVEL)
+					_userObj.configure(elionaConfig=_settingsJson["eliona_handler"], userConfig=_user)
+					_userObj.sendReport(year=_date.year, month=_date.month, createOnly=True, sendAsync=False)
+
+
+		elif _reportName != None:
+
+			#Get the requested report
+			for _report in self.settings["reports"]:
+				
+				if _reportName == _report["name"]:
+
+					_reportObj = Report(name=_reportName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
+					_reportObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report)
+					_reportObj.sendReport(year=_date.year, month=_date.month, createOnly=True, sendAsync=False)
+
+
+
+
 if __name__ == "__main__":
 	"""
 	Main entry point
-	"""
 
-	mainApp = Spreadsheet_report_app( SETTINGS_PATH)
-	mainApp.run(sys.argv)
-	
+	Params
+	-----
+	args*
+	startDate:datetime.fromisoformat	= Start time in Isoformat. For Example: "2022-10-02T00:00:00+02:00"
+	endDate:datetime.fromisoformat		= End time in Isoformat. For Example: "2022-10-02T00:00:00+02:00"
+	settingsPath 						= Path of the current Settings. Example: "./tmp_reports/Cust_Config/config.json"
+	reportName							= Name of the requested report
+	reportExportPath					= [Optional] Set the output path of the created report.
+
+	"""
+	#parse the arguments
+	_argumentParser = argparse.ArgumentParser()
+	_argumentParser.add_argument("-d", "--date", type=str, required=False, help="Date in the format: dd.mm.yyyy")
+	_argumentParser.add_argument("-c", "--config", type=str, required=False, help="Path to the used configuration file. For Example: \"./config/config.json\"")
+	_argumentParser.add_argument("-u", "--user", type=str, required=False, help="User name that's requested. Name can be read from config.json file.")
+	_argumentParser.add_argument("-r", "--report", type=str, required=False, help="Report name that's requested. Name can be read from config.json file.")
+	_argumentParser.add_argument("-o", "--output", type=str, required=False, help="Export file path. If empty will be stored under \"./temp/file_name\"")
+	_args = _argumentParser.parse_args()
+
+	if len(sys.argv) <= 1:
+		mainApp = Spreadsheet_report_app( SETTINGS_PATH)
+		mainApp.run(sys.argv)
+	else:
+		mainApp = Spreadsheet_report_app( SETTINGS_PATH)
+		mainApp._singleExport(_args)
+		

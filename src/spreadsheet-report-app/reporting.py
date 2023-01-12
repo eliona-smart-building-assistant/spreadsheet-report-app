@@ -1,4 +1,3 @@
-
 import os
 import json
 from mail import Mail
@@ -194,7 +193,7 @@ class BasicReport:
 
 		return _configState
 
-	def sendReport(self, year:int, month:int=0, sendAsync:bool=True, subject:str="", content:str="", ) -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="", ) -> None:
 		"""
 		Create and send the report.
 
@@ -221,7 +220,7 @@ class BasicReport:
 			self.reportSchedule = Schedule.MONTHLY
 
 		#Get the start and stop time
-		startStamp, stopStamp = self._getReportTimeSpan(schedule=self.reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
+		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=self.reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
 
 		#Define the report name's 
@@ -234,25 +233,25 @@ class BasicReport:
 			else:
 				_reportName = _reportName + " " + _report["name"]
 
-			_report["tempPath" ] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
+			_report["tempPath" ] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + _stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
 
 
 		#Define the subject
 		if subject == "":
-			_subject = f"Report ({_reportName}) von {startStamp} bis {stopStamp}"
+			_subject = f"Report ({_reportName}) von {_startStamp} bis {_stopStamp}"
 		else:
 			_subject = subject
 
 		#Define the content
 		if content == "":
-			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {startStamp} bis zum {stopStamp}.<br>"
+			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {_startStamp} bis zum {_stopStamp}.<br>"
 			_content = _content + "Alle weiteren Informationen sind in den Reports enthalten."
 		else:
 			_content = content
 
 
 		self.state = ReportState.CREATING
-		_thread = Thread(target=self._process, args=(startStamp, stopStamp, _subject, _content))
+		_thread = Thread(target=self._process, args=(_startStamp, _stopStamp, _subject, _content, createOnly))
 		_thread.start()
 
 		if not sendAsync:
@@ -260,7 +259,7 @@ class BasicReport:
 			#if not send async wait till done
 			_thread.join()
 
-	def _process(self, startStamp:datetime, stopStamp:datetime, subject:str, content:str):
+	def _process(self, startStamp:datetime, stopStamp:datetime, subject:str, content:str, createOnly:bool):
 		"""
 		Thread to create and send the Report
 		"""
@@ -270,7 +269,8 @@ class BasicReport:
 			self._create(report=_report, startStamp=startStamp, stopStamp=stopStamp)
 
 		#Send the mail
-		self._send(subject, content)
+		if not createOnly: 
+			self._send(subject, content)
 
 	def _create(self, report:dict, startStamp:datetime, stopStamp:datetime) -> bool:
 		"""
@@ -288,12 +288,9 @@ class BasicReport:
 
 		self.logger.info(f"Call the reporting function with start {startStamp} and end timestamp {stopStamp}")
 
-		_reportFileAndPath = report["tempPath" ] #TEMP_ATTACHMENT_PATH + str(report["reportPath"]) + "_" + startStamp.date().isoformat() + "_" + stopStamp.date().isoformat() + "." + str(report["reportPath"]).split(".")[-1]
-
-
 		#Call the reporting function
 		_reporter = Spreadsheet()
-		_reportSendFeedBack = _reporter.createReport(startDt=startStamp, endDt=stopStamp, connectionSettings=self.elionaConfig, reportSettings=report, reportFilePath=_reportFileAndPath)
+		_reportSendFeedBack = _reporter.createReport(startDt=startStamp, endDt=stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
 
 		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
