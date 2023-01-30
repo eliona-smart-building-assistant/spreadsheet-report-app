@@ -71,9 +71,8 @@ class Mail:
 
 					#Add the Attachments
 					_attachment = {}
-					_attachment["path"] = _report["reportPath"]
-					_attachment["name"] = str(_report["reportPath"]).split("/")[-1]	
-					_attachment["tempPath"] = _report["tempPath"]
+					_attachment["path"] = _report["tempPath"]
+					_attachment["name"] = str(_report["tempPath"]).split("/")[-1]	
 					_attachmentsList.append(_attachment)
 
 				_attachments = self._readAttachments(attachments=_attachmentsList)
@@ -205,7 +204,7 @@ class Mail:
 		#Iterate through all attachments and try to convert them to a base64 string 
 		for _attachment in _attachmentBase64:
 			
-			_filePath = str(_attachment["tempPath"])
+			_filePath = str(_attachment["path"])
 
 			#Get the File and mime type
 			_fileType = _filePath.split(".")[-1]
@@ -274,16 +273,18 @@ if __name__ == "__main__":
 		_attachment["name"] = str(_report["reportPath"]).split("/")[-1]	
 		_attachmentsList.append(_attachment)
 
+	emptyList = []
 	#Send the test mail
 	_mailHandler.sendMail(	connection=_settings["eliona_handler"], 
 							subject="Eliona APIv2 SpreadsheetApp Testmail Variante 1", 
 							content=_content, 
 							receiver=_receiverList, 
-							attachments=_attachmentsList)
+							attachments=None,
+							blindCopyReceiver=_attachmentsList)
 
 	#Send the test mail
-	_mailHandler.sendMail(	connection=_settings["eliona_handler"], 
-							subject="Eliona APIv2 SpreadsheetApp Testmail Variante 2", 
-							content=_content, 
-							receiver=_receiverList, 
-							reports=_settings["reports"])
+	#_mailHandler.sendMail(	connection=_settings["eliona_handler"], 
+	#						subject="Eliona APIv2 SpreadsheetApp Testmail Variante 2", 
+	#						content=_content, 
+	#						receiver=_receiverList, 
+	#						reports=_settings["reports"])

@@ -65,7 +65,7 @@ class Spreadsheet_report_app:
 	settings = {}
 	settingsPath = ""
 	storagePath = "./state.json"
-	testing = True
+	testing = True	
 	timeTable = []
 	timeIndex = 0
 	users:dict[str, User] = {}

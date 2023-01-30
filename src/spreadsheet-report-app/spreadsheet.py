@@ -112,23 +112,33 @@ class Spreadsheet:
 						_timeStampFormat = _config["timeStampEnd"]
 						_dataTable.at[_rowIndex, _columnIndex] = (endDateTime- timedelta(days=1)).strftime(_timeStampFormat)
 
-					elif ("assetId" in _config) and ("attribute" in _config):
+					elif ((("assetId" in _config) or ("assetGai" in _config)) and ("attribute" in _config)):
 
 						_timeStampFormat = "%Y-%m-%d %H:%M:%S"
 						_endTimeOffset = timedelta(days=1)
 
-						#self.logger.debug("Table config found: " + str(_config))
-						_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
-																					assetId=int(_config["assetId"]), 
-																					attribute=str(_config["attribute"]), 
-																					startDateTime=endDateTime - timedelta(days=1), 
-																					endDateTime=endDateTime +_endTimeOffset,
-																					raster=_config["raster"],
-																					mode=_config["mode"],
-																					timeStampKey="TimeStamp",
-																					valueKey="Value")
 
-						self.logger.debug(_data)
+						if "assetId" in _config: 
+							_assetId = int(_config["assetId"])
+						else:
+							_assetId = 0
+
+						if "assetGai" in _config:
+							_assetGai = _config["assetGai"]
+						else:
+							_assetGai = ""
+
+						_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
+																								assetGai=_assetGai,
+																								assetId=_assetId, 
+																								attribute=str(_config["attribute"]), 
+																								startDateTime=endDateTime - timedelta(days=1), 
+																								endDateTime=endDateTime +_endTimeOffset,
+																								raster=_config["raster"],
+																								mode=_config["mode"],
+																								timeStampKey="TimeStamp",
+																								valueKey="Value")
+
 
 						#Set the TimeStamp straight
 						_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
@@ -195,7 +205,12 @@ class Spreadsheet:
 				_raster = str(_configDict[_columnName]["raster"])
 
 				#Get the time tick 
-				if _raster.startswith("H"):
+				if _raster == "MONTH":
+
+					#If we got monthly spans we need to work with replace instead of timedelta.
+					pass
+
+				elif _raster.startswith("H"):
 
 					timeTick = timedelta(hours=int(_raster.removeprefix("H")))	
 
@@ -205,36 +220,56 @@ class Spreadsheet:
 
 				elif _raster.startswith("S"):
 
-					timeTick = timedelta(seconds=int(_raster.removeprefix("S")))	
+					timeTick = timedelta(seconds=int(_raster.removeprefix("S")))
+
 				else:
 					self.logger.error("No valid time span found")
-					exit()
+					return()
 				
 				#Create the time column with the required timestamp
 				_timeStampList = []
 				_timeStamp = startDateTime
-				while (_timeStamp <= endDateTime):
-					 
-					#_timeStamp = _timeStamp + timeTick
-					_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
-					_timeStamp = _timeStamp + timeTick
+
+				if _raster == "MONTH":
+					while (_timeStamp <= endDateTime):
+						_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
+						_timeStamp = _timeStamp.replace(month=_timeStamp.month + 1)
+
+				else:
+					while (_timeStamp <= endDateTime):
+						_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
+						_timeStamp = _timeStamp + timeTick
 
 				#Create the DataFrame for the readed Data
 				_dataTable = pd.DataFrame( _timeStampList, columns=[_timeStampColumnName])
 
-			elif (("assetId" in _configDict[_columnName])  
+			elif ((("assetId" in _configDict[_columnName]) or ("assetGai" in _configDict[_columnName])) 
 					and ("attribute" in _configDict[_columnName]) 
 					and ("mode" in _configDict[_columnName])):
 				
-				_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
-																			assetId=int(_configDict[_columnName]["assetId"]), 
-																			attribute=str(_configDict[_columnName]["attribute"]), 
-																			startDateTime=startDateTime, 
-																			endDateTime=endDateTime,
-																			raster=_raster,
-																			mode=_configDict[_columnName]["mode"],
-																			timeStampKey = _timeStampColumnName,
-																			valueKey=_columnName)
+
+
+				if "assetId" in _config: 
+					_assetId = int(_config["assetId"])
+				else:
+					_assetId = 0
+
+				if "assetGai" in _config:
+					_assetGai = _config["assetGai"]
+				else:
+					_assetGai = ""
+
+
+				_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona,
+																						assetGai=_assetGai, 
+																						assetId=_assetId,
+																						attribute=str(_configDict[_columnName]["attribute"]), 
+																						startDateTime=startDateTime, 
+																						endDateTime=endDateTime,
+																						raster=_raster,
+																						mode=_configDict[_columnName]["mode"],
+																						timeStampKey = _timeStampColumnName,
+																						valueKey=_columnName)
 
 				#Convert the data with the right timestamp format
 				_dataFrame[_timeStampColumnName] = pd.to_datetime(arg=_dataFrame[_timeStampColumnName]).dt.strftime(_timeStampFormat)
@@ -250,29 +285,10 @@ class Spreadsheet:
 			_dataTable = _dataTable.fillna(method="ffill")
 			_dataTable = _dataTable.fillna(method="bfill")
 
-		self.logger.debug(_dataTable)
-
 		#Write the data to file
 		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
 
 		return _reportCreated
-
-	def __formatTimeStampRow(self, data:pd.DataFrame, timeStampKey:str, timeStampFormat:str):
-		"""
-		Change the timestamp format 
-
-		data:pd.DataFrame = dataset as pandas data frame
-		timeStampKey:str = key of the timestamp column
-		timeStampFormat:str = timestamp format to use
-		"""
-
-		self.logger.debug("Before timestamp change")
-		self.logger.debug(data)
-
-		data[timeStampKey] = pd.to_datetime(arg=data[timeStampKey]).dt.strftime(timeStampFormat)
-
-		self.logger.debug("After timestamp change:")
-		self.logger.debug(data)
 
 	def __writeDataToFile(self, data:pd.DataFrame, settings:dict)-> bool:
 		"""
@@ -315,7 +331,7 @@ class Spreadsheet:
 		return _fileWritten
 
 	def __getAggregatedDataList(self, eliona:ElionaApiHandler, assetId:int, attribute:str, startDateTime:datetime, 
-								endDateTime:datetime, raster:str, mode:str, timeStampKey:str, valueKey:str) -> tuple[dict|None, pd.DataFrame|None, bool]:
+								endDateTime:datetime, raster:str, mode:str, timeStampKey:str, valueKey:str, assetGai:str="") -> tuple[dict|None, pd.DataFrame|None, bool]:
 		"""
 		Get an attribute value from the given time span with tick
 		Will return an dictionary with time stamp as key
@@ -343,14 +359,32 @@ class Spreadsheet:
 
 		try:
 
-			self.logger.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
-							startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
-				
-			_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
+			_assetId = 0
+
+			if assetGai != "":
+
+				self.logger.info(	"get data from: assetGai:" + assetGai + " attribute:" + attribute + " start date:" + 
+									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
+
+
+				_retVal, part = eliona.get_data_aggregated(	asset_gai=assetGai, 
 															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
 															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
 															data_subtype="input")
+				_assetId = eliona.get_asset_id(asset_gai=assetGai)
+			
+			elif assetId > 0 :
+
+				self.logger.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
+									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
+
+
+				_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
+															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
+															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
+															data_subtype="input")
+				_assetId = assetId
 
 			
 			# Dictionary will return True if not empty
@@ -359,11 +393,8 @@ class Spreadsheet:
 				#Get the requested data and aquisition mode
 				for _data in _retVal:
 
-					#Log the received data
-					#self.logger.debug(_data)
-
 					#write the info to the LOGGER
-					if ((_data["asset_id"] == assetId)
+					if ((str(_data["asset_id"]) == str(_assetId))
 						and (_data["attribute"] == attribute) 
 						and (_data["raster"] == raster)
 						and mode in _data ):
@@ -372,8 +403,6 @@ class Spreadsheet:
 
 						_dataFrame = pd.concat([_dataFrame, pd.DataFrame([[_data["timestamp"], _data[mode]]], columns=(timeStampKey, valueKey))] )	
 
-						#self.logger.debug("Asset ID: " + str(assetId) + " // attribute: "+ str(attribute) 
-						#			+ " // raster: " + str(raster) + " // mode: " + str(mode))
 						self.logger.debug(	"Timestamp" + str(_data["timestamp"]) + " // AssetId:  " + 
 								str(_data["asset_id"]) + " // Attribute: " + str(_data["attribute"]) + 
 								" // Raster: " + str(_data["raster"]) + " // Value: " +str(_data[mode]))
@@ -384,7 +413,7 @@ class Spreadsheet:
 				_checkActive = False
 				_currentTimeSpan = startDateTime
 				_timeDelta = timedelta()
-				_missedTimeStamps =  "AssetId: " + str(assetId) +  " // Attribute: " + attribute + " // Missed time stamps: "
+				_missedTimeStamps =  "Asset ID: " + str(_assetId) +  " // Attribute: " + attribute + " // Missed time stamps: "
 
 		
 				if raster.find("DAY") != -1:
@@ -465,10 +494,6 @@ class Spreadsheet:
 
 
 		try:
-
-			#self.logger.debug("get data from: assetId:" + str(assetId) + " attribute:" + attribute + 
-			# " start date:" + startDateTime.isoformat() + " end date:" + endDateTime.isoformat() + 
-			# " tick:" + str(tick) )
 
 			#get the trend data from the source
 			_data, part = eliona.get_data_trends( 	asset_id=assetId, 

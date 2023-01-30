@@ -1,3 +1,7 @@
+"""
+Module to handle Report and User Based reportings
+"""
+
 import os
 import json
 from mail import Mail
@@ -223,7 +227,7 @@ class BasicReport:
 		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=self.reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
 
-		#Define the report name's 
+		#Define the report name's wit start and end time
 		_reportName = ""
 		for _report in self.reports:
 
@@ -428,9 +432,9 @@ class User(BasicReport):
 		self.reports = userConfig["reports"]
 
 		#Add the user to the list
-		self.recipients = None
-		self.blindCopyRecipients = []
-		self.blindCopyRecipients.append(userConfig["msgEndpoint"])
+		self.blindCopyRecipients = None
+		self.recipients = []
+		self.recipients.append(userConfig["msgEndpoint"])
 
 		return super().configure(elionaConfig=elionaConfig)
 
