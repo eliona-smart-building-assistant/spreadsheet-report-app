@@ -307,13 +307,8 @@ class BasicReport:
 		
 		Params
 		-----
-		report:dict 			= Report settings as a dictionary
-		startStamp:datetime 	= Start timestamp
-		stopStamp:datetime		= Stop timestamp
-
-		Return Values
-		-----
-		-> bool = Will return True if all emails where send. False if not.
+		subject:str		= Subject of the mail
+		content:str		= content of the mail in html format
 		
 		"""
 
@@ -328,14 +323,19 @@ class BasicReport:
 		if _mailState:
 
 			#Store the current time stamp that we have send the Data			
-			self.lastSend = datetime.now()
+
+			if self.testing:
+				self.lastSend = self.currentTestTime
+			else:
+				self.lastSend = datetime.now()
+	
 			self.state = ReportState.IDLE
 			
 			#update the storage 
 			with open(self.storePath, "r+") as jsonFile:
 				_data = json.load(jsonFile)
 
-				_data["LastSend"] = datetime.now().date() 
+				_data["LastSend"] = self.lastSend.date().isoformat()
 
 				jsonFile.seek(0)  # rewind
 				json.dump(_data, jsonFile)
