@@ -81,6 +81,9 @@ class Spreadsheet_report_app:
 
 		self.settingsPath = settingsPath
 
+		#Initially delete the temp files after start up. 
+		self._deleteOldTempFiles(path=TEMP_ATTACHMENT_PATH, force=True)
+
 		if TESTING_ENABLED:
 		
 			dateTimeStrFormat =  "%d-%m-%Y %H:%M:%S"
@@ -292,14 +295,14 @@ class Spreadsheet_report_app:
 		self.timeIndex += 1
 		return _lastSendTimeStamp
 
-	def _deleteOldTempFiles(self, path:str):
+	def _deleteOldTempFiles(self, path:str, force:bool=False):
 		"""
 		Delete the old Template files by a given path
 
 		Param
 		----
 		path:str 	= Path of the files to be deleted.
-
+		force:bool	= True = Force to delete the files. Without considering the timestamp // False/None = Only delete the files if pld enough
 		"""
 
 		current_time = datetime.now()
@@ -314,6 +317,10 @@ class Spreadsheet_report_app:
 				if os.path.getctime(file_path) < current_time.timestamp() - (10 * 60): #365 * 24 * 60 * 60
 					
 					#Remove the file
+					os.remove(file_path)
+
+				elif force:
+					#Remove the file if it is been forced
 					os.remove(file_path)
 
 			except Exception as err:
