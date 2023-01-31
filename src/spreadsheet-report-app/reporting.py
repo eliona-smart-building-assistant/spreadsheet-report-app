@@ -199,7 +199,7 @@ class BasicReport:
 
 		return _configState
 
-	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="", ) -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
 		"""
 		Create and send the report.
 
@@ -239,7 +239,7 @@ class BasicReport:
 			else:
 				_reportName = _reportName + " " + _report["name"]
 
-			_report["tempPath" ] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + _stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
+			_report["tempPath"] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + _stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
 
 
 		#Define the subject
@@ -344,10 +344,6 @@ class BasicReport:
 				jsonFile.truncate() # remove the "old" overlapping data
 		else:
 			self.state = ReportState.CANCELED
-
-		if self.testing:
-			self.lastSend = self.currentTestTime
-			self.state = ReportState.IDLE
 
 	def _getReportTimeSpan(self, schedule:Schedule, utcDelta:int, year:int, month:int=1) -> Tuple[datetime, datetime]:
 		"""
