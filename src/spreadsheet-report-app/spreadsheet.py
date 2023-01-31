@@ -163,7 +163,7 @@ class Spreadsheet:
 
 		return _reportCreated
 
-	def __createDataListReport(self, eliona:ElionaApiHandler, settings:dict, startDateTime:datetime, endDateTime:datetime):
+	def __createDataListReport(self, eliona:ElionaApiHandler, settings:dict, startDateTime:datetime, endDateTime:datetime) -> bool:
 		"""
 		Create the table report from the given template
 
@@ -228,7 +228,7 @@ class Spreadsheet:
 
 				else:
 					self.logger.error("No valid time span found")
-					return()
+					return False
 				
 				#Create the time column with the required timestamp
 				_timeStampList = []
