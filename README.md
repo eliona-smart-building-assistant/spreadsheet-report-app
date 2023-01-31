@@ -237,3 +237,10 @@ _**Example**_
     "mode":"last"
 }
 ```
+
+
+## Temp file handling
+
+In order to send the data the reports will be created in an temporary folder. The report will only be created once if it needed to be send to multiple users. The handling of the temporary files will be like this:
+
+![TempFileHandling](./doc/TempFileHandling.png)

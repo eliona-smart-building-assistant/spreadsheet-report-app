@@ -149,7 +149,10 @@ __init__.py
 
 #Ignoring draw io temp files
 *.bkp
+*.dtmp
 
 # Ignore Testing files
 /testing
 .vscode/launch.json
+
+
