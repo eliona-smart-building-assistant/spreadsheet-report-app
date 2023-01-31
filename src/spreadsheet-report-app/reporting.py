@@ -111,9 +111,11 @@ class BasicReport:
 		#Update the log handler
 		self.logger.setLevel(logLevel)
 		self.logger.name = self.name
+
 		self.mailHandler = Mail(logLevel=logLevel)
 
-		self.storePath = f"./tmp_reports/{_fileName}.json"
+		#Set the temp storage
+		self.storePath = f"./tmp_reports/storage/{_fileName}.json"
 		self.readStorage()
 		
 		self.tempFilePath = tempFilePath
@@ -157,7 +159,7 @@ class BasicReport:
 		->bool	= Will return true if data was successfully read
 		"""
 
-		_reportWasSend = False
+		_readStorageSuccessfully = False
 
 		try:
 			if os.path.isfile(self.storePath):
@@ -169,13 +171,18 @@ class BasicReport:
 					#Get the data from the storage 
 					_dateTimeStrFormat = "%Y-%m-%d"
 					self.lastSend = datetime.strptime(_storageJson["LastSend"], _dateTimeStrFormat)
-					_reportWasSend = True
+					_readStorageSuccessfully = True
+			else:
+				with open(self.storePath, "w") as settingsFile:
+					_data = {}
+					_data["LastSend"] = self.lastSend.date().isoformat()
+					json.dump(_data, settingsFile)
 
 		except Exception as err:
 			self.logger.warning(err)
-			_reportWasSend = False		
+			_readStorageSuccessfully = False		
 
-		return _reportWasSend
+		return _readStorageSuccessfully
 
 	def configure(self, elionaConfig:dict)->bool:
 		"""
@@ -499,4 +506,3 @@ class Report(BasicReport):
 			self.recipients.append(_recipient["msgEndpoint"]) 
 
 		return super().configure(elionaConfig=elionaConfig)
-	
