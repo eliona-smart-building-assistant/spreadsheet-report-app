@@ -20,7 +20,7 @@ class Mail:
 	Will convert the attachments to base64 based file strings and send to the recipients.
 	"""
 
-	logger = None #log.createLogger(LOGGER_NAME, loglevel=LOGGER_LEVEL)
+	logger = log.createLogger(LOGGER_NAME, loglevel=LOGGER_LEVEL)
 	state = ReportState.IDLE
 	mailId = ""
 	sendDate = datetime(1990,1,1)
@@ -35,7 +35,7 @@ class Mail:
 		-----
 		-> None
 		"""
-		self.logger = log.createLogger(LOGGER_NAME, loglevel=logLevel)
+		self.logger.setLevel(logLevel)
 
 	def sendMail(self, connection:dict, subject:str, content:str, receiver:list, blindCopyReceiver:list=None, attachments:list=None, reports:list=None) -> bool:
 		"""
