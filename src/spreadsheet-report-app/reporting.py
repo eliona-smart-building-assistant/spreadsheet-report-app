@@ -106,9 +106,11 @@ class BasicReport:
 		"""
 
 		self.name = name
-		_fileName = self._slugify(name)
+		_fileName = self._slugify(value=name)
 
-		self.logger = log.createLogger(applicationName=self.name, loglevel=logLevel)
+		#Update the log handler
+		self.logger.setLevel(logLevel)
+		self.logger.name = self.name
 		self.mailHandler = Mail(logLevel=logLevel)
 
 		self.storePath = f"./tmp_reports/{_fileName}.json"
@@ -396,7 +398,7 @@ class BasicReport:
 
 		return (_startTime, _endTime)
 
-	def _slugify(value, allow_unicode=False):
+	def _slugify(self, value, allow_unicode=False):
 		"""
 		Taken from https://github.com/django/django/blob/master/django/utils/text.py
 		Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
