@@ -438,6 +438,44 @@ class User(BasicReport):
 
 		return super().configure(elionaConfig=elionaConfig)
 
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
+		"""
+		Create and send the report.
+
+		Params
+		------
+		subject:str			= Subject of the mail
+		content				= Content of the mail
+		year:int			= Year of the requested report
+		month:int			= Month of the requested report. If 0 => Yearly report will be created
+		sendAsync:bool		= Set to True if you want to send it asynchronous
+									to False if you want to send it now and wait for it to be send
+
+		Return
+		------
+		->None				= No returns 											
+		"""
+
+		#Subject of the mail changed to the user based subject
+		if subject == "":
+			_monthName = datetime(year=year, month=month, day=1).strftime("%B")
+			_subjectString = f"eliona Benutzerreport vom {_monthName} {year}"
+		else:
+			_subjectString = subject
+
+		#Create the content for the user based reports
+		if content == "":
+			_htmlContentString = f"Heliona {self.name}, <br><br> hier sind die gewünschten Reports aus der Reporting App.<br><br><ul>" 
+
+			for _report in self.reports:
+				_htmlContentString = _htmlContentString + "<li>" + _report["name"] + "</li>"
+			_htmlContentString = _htmlContentString + "</ul>"
+		else:
+			_htmlContentString = content
+
+		#Pass to the parent class
+		super().sendReport(year, month, createOnly, sendAsync, _subjectString, _htmlContentString)
+
 class Report(BasicReport):
 	"""
 	Object to handle all reports for one user
