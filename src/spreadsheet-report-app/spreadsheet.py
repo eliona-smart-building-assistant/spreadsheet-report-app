@@ -22,7 +22,7 @@ class Spreadsheet:
 		"""
 
 		self.reportFilePath = ""
-		#self.logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=logLevel)
+		self.logger.setLevel(logLevel)
 
 	def createReport(self, startDt:datetime, endDt:datetime, connectionSettings:dict, reportSettings:dict) -> bool:
 		"""
