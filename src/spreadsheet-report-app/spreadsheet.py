@@ -42,6 +42,10 @@ class Spreadsheet:
 		"""
 
 		self.reportFilePath = reportSettings["tempPath" ]
+		
+		# If the file already exists we skip the creation part
+		if os.path.isfile(self.reportFilePath):
+			return True
 
 		#set the local variables
 		_reportCreatedSuccessfully = False
