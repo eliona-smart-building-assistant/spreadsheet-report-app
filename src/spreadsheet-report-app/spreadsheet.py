@@ -1,6 +1,8 @@
 import os
 import argparse
 import json
+from openpyxl import load_workbook
+import formulas
 import pandas as pd
 import shutil
 import utils.logger as log
@@ -73,7 +75,6 @@ class Spreadsheet:
 			self.logger.info("Connection not possible. Will try again.")
 
 		return _reportCreatedSuccessfully
-
 
 	def __createDataEntryReport(self, eliona:ElionaApiHandler, settings:dict, startDateTime:datetime, endDateTime:datetime) -> bool:
 		"""
@@ -311,6 +312,9 @@ class Spreadsheet:
 
 				with pd.ExcelWriter(path=(self.reportFilePath), mode="a", if_sheet_exists="overlay") as writer:
 					data.to_excel(writer, sheet_name= settings["sheet"], index=False)
+
+				#Create an csv file from the calculated ExcelFile
+				self.__createCalculatedCsv(excelFilePath=self.reportFilePath, excelSheet=settings["sheet"], csvSeparator=settings["separator"])
 
 				# Write the file was successful
 				_fileWritten = True
@@ -560,8 +564,19 @@ class Spreadsheet:
 
 				elif settings["templateFile"].endswith(".xlsx") or settings["templateFile"].endswith(".xls"):
 
-					_template = pd.read_excel(io=settings["templateFile"], sheet_name=settings["sheet"])
-	
+					wb = load_workbook(filename = settings["templateFile"])
+					sheet_ranges = wb[settings["sheet"]]
+					_template = pd.DataFrame(sheet_ranges.values)
+
+					#set column names equal to values in row index position 0
+					_template.columns = _template.iloc[0]
+
+					#remove first row from DataFrame
+					_template = _template[1:]
+					_template.reset_index(drop=True, inplace=True)
+
+					#_template = pd.read_excel(io=settings["templateFile"], sheet_name=settings["sheet"])
+
 		except OSError:
 			self.logger.exception("Template file could not be opened: " + settings["templateFile"])
 
@@ -569,3 +584,59 @@ class Spreadsheet:
 		#Return the _template
 		return _template
 
+	def __createCalculatedCsv(self, excelFilePath:str, excelSheet:str, csvSeparator:str) -> bool:
+		"""
+		Create a cav file from a excel with possible calculations.
+
+		Params
+		----
+		excelFilePath:str	= Filepath of the ExelFile
+
+
+		Return
+		----
+		Will Return True if everything was created
+
+		"""
+
+
+		_fileWritten = False
+		_fileType = excelFilePath.split(".")[-1]
+
+
+		try:
+			#The variable spreadsheet provides the full path with filename to the excel spreadsheet with unevaluated formulae		
+			_fpath = os.path.basename(excelFilePath) 
+			_dirname = os.path.dirname(excelFilePath) + "/calculated" 
+
+			_excelModel = formulas.ExcelModel().loads(excelFilePath).finish()
+			_excelModel.calculate()
+			_excelModel.write( dirpath=(_dirname))
+
+			#Use openpyxl to open the updated excel spreadsheet now
+			_wb = load_workbook(filename = _dirname + "/" + _fpath.upper(), data_only = True)
+			_sheetRanges = _wb[excelSheet.upper()]
+			_calculatedDataFrame = pd.DataFrame(_sheetRanges.values)
+
+			#set column names equal to values in row index position 0
+			_calculatedDataFrame.columns = _calculatedDataFrame.iloc[0]
+
+			#remove first row from DataFrame
+			_calculatedDataFrame = _calculatedDataFrame[1:]
+			_calculatedDataFrame.reset_index(drop=True, inplace=True)
+
+			# Create the csv file 
+			_csvReportPath = excelFilePath.replace(_fileType, "csv")
+			_calculatedDataFrame.to_csv(path_or_buf=_csvReportPath, mode="w", index=False, header=True, sep=csvSeparator)
+
+			# Write the file was successful
+			_fileWritten = True
+
+			# Clean up the temp file
+			os.remove(_dirname + "/" + _fpath.upper())
+
+
+		except:
+			self.logger.exception("Could not create csv file from Excel File: " + self.reportFilePath)
+
+		return _fileWritten

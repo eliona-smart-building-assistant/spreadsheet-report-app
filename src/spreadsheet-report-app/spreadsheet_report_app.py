@@ -310,6 +310,7 @@ class Spreadsheet_report_app:
 		#Get all files
 		for file in os.listdir(path):
 
+			file_path = ""
 			try:
 				file_path = os.path.join(path, file)
 
