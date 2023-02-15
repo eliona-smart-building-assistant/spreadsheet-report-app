@@ -246,7 +246,8 @@ class BasicReport:
 			else:
 				_reportName = _reportName + " " + _report["name"]
 
-			_report["tempPath"] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + _stopStamp.date().isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
+			_dayDelta = timedelta(days=1)
+			_report["tempPath"] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
 
 
 		#Define the subject
