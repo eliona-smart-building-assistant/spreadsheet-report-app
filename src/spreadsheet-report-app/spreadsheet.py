@@ -1,6 +1,7 @@
 import os
 import argparse
 import json
+from json import JSONDecoder
 from openpyxl import load_workbook
 import formulas
 import pandas as pd
@@ -96,66 +97,70 @@ class Spreadsheet:
 			_timeStampFormat = ""
 
 			for _columnIndex, _value in _row.items():
-
+				_jsonFound = False
+				_newValue = _value
 				#Search for json config
 				#{"assetId":"xxx", "attribute":"yyy"}
 				if type(_value) == str:
 
-					try:
-						_config = json.loads(_value)
-					except:
-						_config = {}
-						#self.logger.exception("Config could not be loaded from cell.")
+					for _config, _configRaw in self.__findJson(_value):
+						_jsonFound = True
 
-					if ("timeStampStart" in _config):
-					
-						_timeStampFormat = _config["timeStampStart"]
-						_dataTable.at[_rowIndex, _columnIndex] = startDateTime.strftime(_timeStampFormat)
+						if ("timeStampStart" in _config):
+						
+							_timeStampFormat = _config["timeStampStart"]
+							_newValue = startDateTime.strftime(_timeStampFormat)
 
-					elif ("timeStampEnd" in _config):
+						elif ("timeStampEnd" in _config):
 
-						_timeStampFormat = _config["timeStampEnd"]
-						_dataTable.at[_rowIndex, _columnIndex] = (endDateTime- timedelta(days=1)).strftime(_timeStampFormat)
+							_timeStampFormat = _config["timeStampEnd"]
+							_newValue = (endDateTime- timedelta(days=1)).strftime(_timeStampFormat)
 
-					elif ((("assetId" in _config) or ("assetGai" in _config)) and ("attribute" in _config)):
+						elif ((("assetId" in _config) or ("assetGai" in _config)) and ("attribute" in _config)):
 
-						_timeStampFormat = "%Y-%m-%d %H:%M:%S"
-						_endTimeOffset = timedelta(days=1)
+							_timeStampFormat = "%Y-%m-%d %H:%M:%S"
+							_endTimeOffset = timedelta(days=1)
 
 
-						if "assetId" in _config: 
-							_assetId = int(_config["assetId"])
-						else:
-							_assetId = 0
+							if "assetId" in _config: 
+								_assetId = int(_config["assetId"])
+							else:
+								_assetId = 0
 
-						if "assetGai" in _config:
-							_assetGai = _config["assetGai"]
-						else:
-							_assetGai = ""
+							if "assetGai" in _config:
+								_assetGai = _config["assetGai"]
+							else:
+								_assetGai = ""
 
-						_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
-																								assetGai=_assetGai,
-																								assetId=_assetId, 
-																								attribute=str(_config["attribute"]), 
-																								startDateTime=endDateTime - timedelta(days=1), 
-																								endDateTime=endDateTime +_endTimeOffset,
-																								raster=_config["raster"],
-																								mode=_config["mode"],
-																								timeStampKey="TimeStamp",
-																								valueKey="Value")
+							_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
+																									assetGai=_assetGai,
+																									assetId=_assetId, 
+																									attribute=str(_config["attribute"]), 
+																									startDateTime=endDateTime - timedelta(days=1), 
+																									endDateTime=endDateTime +_endTimeOffset,
+																									raster=_config["raster"],
+																									mode=_config["mode"],
+																									timeStampKey="TimeStamp",
+																									valueKey="Value")
 
 
-						#Set the TimeStamp straight
-						_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
+							#Set the TimeStamp straight
+							_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
 
-						#Just get the right timestamp
-						_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == endDateTime.strftime(_timeStampFormat) )]
+							#Just get the right timestamp
+							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == endDateTime.strftime(_timeStampFormat) )]
 
-						#Set the Value to the Spreadsheet cell
-						if(_dataFrame.size > 0):
-							_dataTable.at[_rowIndex, _columnIndex] = _dataFrame.at[0,"Value"]
-						else:
-							_dataTable.at[_rowIndex, _columnIndex] = "NAN"
+							#Set the Value to the Spreadsheet cell
+							if(_dataFrame.size > 0):
+								_newValue = _newValue.replace(_configRaw,  str(_dataFrame.at[0,"Value"])) #.replace(".", ",")
+							else:
+								_newValue = _newValue.replace(_configRaw, "NO-VALUE")
+
+				if _jsonFound:
+					if self.__isFloat(_newValue):
+						_dataTable.at[_rowIndex, _columnIndex] = float(_newValue)
+					else:
+						_dataTable.at[_rowIndex, _columnIndex] = _newValue
 
 
 
@@ -481,66 +486,6 @@ class Spreadsheet:
 		#Return the values
 		return (_dataSet, _dataFrame, _validKeys)
 
-	def __getTrendDataList(self, eliona:ElionaApiHandler, assetId:int, attribute:str, startDateTime:datetime, endDateTime:datetime, 
-							tick:timedelta) -> dict|None:
-		"""
-		Get an attribute value from the given time span with tick
-		Will return an dictionary with time stamp as key
-
-		eliona:ElionaApiHandler	= eliona API Handler instance
-		assetId:int = Asset ID to get the data from
-		attribute:str = Attribute from the Asset to read the data from
-		startDateTime:datetime = Start point from which we create an dictionary entry every time tick  
-		endDateTime:datetime = End pint for the dictionary
-		tick:timedelta = delta for each entry.
-
-		-> dict:{datetime, dataValue}	
-		"""
-
-		#Create the return value as a dictionary 
-		_retVal = {}
-
-
-		try:
-
-			#get the trend data from the source
-			_data, part = eliona.get_data_trends( 	asset_id=assetId, 
-													from_date=startDateTime.isoformat(), 
-													to_date=endDateTime.isoformat(), 
-													data_subtype="input")
-
-			_timeA = startDateTime
-			_timeB = self.startDateTime +  tick
-			for dataEntry in _data:
-
-				#Check for the attribute
-				if attribute in dataEntry["data"]:			
-
-					#Add entry if between time steps
-					if (_timeA < dataEntry["timestamp"]) and (dataEntry["timestamp"] < _timeB):
-						_retVal[_timeA] = dataEntry["data"][attribute]
-
-						#_retVal[_timeA] = str(dataEntry["data"][attribute]).replace(".", ",")
-
-						_timeA = _timeB
-						_timeB = _timeB + tick
-
-					#if we exceed the timespan try to find the last one
-					elif (dataEntry["timestamp"] > _timeB) and not (_timeA in _retVal):
-
-						#no entry found for the current value. In this case we will try to get an entry from the last step
-						if (_timeA - tick)	>= startDateTime:
-							if (_timeA - tick) in _retVal:
-								_retVal[(_timeA)] = _retVal[(_timeA - tick)]
-
-
-		except:
-			self.logger.exception("Error ocurred during reading the trend data")
-			
-
-		#Return the values
-		return _retVal
-
 	def __readTableTemplate(self, settings:dict) -> pd.DataFrame | None:
 		"""
 		Read the template Data 
@@ -586,7 +531,8 @@ class Spreadsheet:
 
 	def __createCalculatedCsv(self, excelFilePath:str, excelSheet:str, csvSeparator:str) -> bool:
 		"""
-		Create a cav file from a excel with possible calculations.
+		Create a csv file from a excel with possible calculations.
+		Will create a template excel file and 
 
 		Params
 		----
@@ -640,3 +586,49 @@ class Spreadsheet:
 			self.logger.exception("Could not create csv file from Excel File: " + self.reportFilePath)
 
 		return _fileWritten
+
+	def __findJson(self, text:str):
+		"""
+		Find JSON objects in text, and yield the decoded JSON data
+
+		Does not attempt to look for JSON arrays, text, or other JSON types outside
+		of a parent JSON object.
+
+		Params
+		----
+
+
+		"""
+		decoder=JSONDecoder()
+		pos = 0
+		while True:
+			match = text.find('{', pos)
+			if match == -1:
+				break
+			try:
+				result, index = decoder.raw_decode(text[match:])
+				resultRaw = text[match:(match + index)]
+				yield result, resultRaw
+				pos = match + index
+			except ValueError:
+				pos = match + 1
+
+	def __isFloat(self, num:str) -> bool:
+		"""
+		Check if a string is a float or not
+		
+		Params:
+		------
+		num		:number as astring to check
+
+		Return:
+		------
+		Will Return True if string is a valid float. False if not
+
+		"""
+
+		try:
+			float(num)
+			return True
+		except ValueError:
+			return False
