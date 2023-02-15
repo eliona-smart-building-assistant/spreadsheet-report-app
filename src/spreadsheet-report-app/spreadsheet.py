@@ -190,8 +190,6 @@ class Spreadsheet:
 		#Read the template 
 		_dataTable = self.__readTableTemplate(settings=settings)
 
-		print(_dataTable)
-
 		#Read the configuration from the template
 		_configDict = {}
 		for _columnName in _dataTable.columns.values:
@@ -368,8 +366,6 @@ class Spreadsheet:
 		_validKeys = True
 		_dataFrame = pd.DataFrame(columns=(timeStampKey, valueKey))
 
-		print(_dataFrame)
-
 		try:
 
 
@@ -419,8 +415,6 @@ class Spreadsheet:
 						self.logger.debug(	"Timestamp" + str(_data["timestamp"]) + " // AssetId:  " + 
 								str(_data["asset_id"]) + " // Attribute: " + str(_data["attribute"]) + 
 								" // Raster: " + str(_data["raster"]) + " // Value: " +str(_data[mode]))
-
-				print(_dataFrame)
 
 				#Validate the Data
 				_checkActive = False
