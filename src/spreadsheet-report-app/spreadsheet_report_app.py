@@ -314,15 +314,20 @@ class Spreadsheet_report_app:
 			try:
 				file_path = os.path.join(path, file)
 
-				#Check if file is older then one year
-				if os.path.getctime(file_path) < current_time.timestamp() - (10 * 60): #365 * 24 * 60 * 60
-					
-					#Remove the file
-					os.remove(file_path)
+				if os.path.isfile(file_path):
 
-				elif force:
-					#Remove the file if it is been forced
-					os.remove(file_path)
+					#Check if file is older then one year
+					if os.path.getctime(file_path) < current_time.timestamp() - (10 * 60): #365 * 24 * 60 * 60
+						
+						#Remove the file
+						os.remove(file_path)
+
+					elif force:
+						#Remove the file if it is been forced
+						os.remove(file_path)
+				elif os.path.isdir(file_path):
+					self._deleteOldTempFiles(file_path, False)
+
 
 			except Exception as err:
 
@@ -386,8 +391,6 @@ class Spreadsheet_report_app:
 					_reportObj.sendReport(year=_date.year, month=_date.month, createOnly=True, sendAsync=False)
 
 
-
-
 if __name__ == "__main__":
 	"""
 	Main entry point
@@ -417,4 +420,3 @@ if __name__ == "__main__":
 	else:
 		mainApp = Spreadsheet_report_app( SETTINGS_PATH)
 		mainApp._singleExport(_args)
-		
