@@ -224,18 +224,6 @@ class BasicReport:
 		->None				= No returns 											
 		"""
 
-
-		#get the start and stop date
-		if month == 0:
-			self.reportSchedule = Schedule.YEARLY
-			month = 1
-		else:
-			self.reportSchedule = Schedule.MONTHLY
-
-		#Get the start and stop time
-		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=self.reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
-
-
 		#Define the report name's wit start and end time
 		_reportName = ""
 		for _report in self.reports:
@@ -246,26 +234,22 @@ class BasicReport:
 			else:
 				_reportName = _reportName + " " + _report["name"]
 
-			_dayDelta = timedelta(days=1)
-			_report["tempPath"] = self.tempFilePath + str(_report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(_report["reportPath"]).split(".")[-1]
-
-
 		#Define the subject
 		if subject == "":
-			_subject = f"Report ({_reportName}) von {_startStamp} bis {_stopStamp}"
+			_subject = f"Report ({_reportName}) vom {month}.{year}"
 		else:
 			_subject = subject
 
 		#Define the content
 		if content == "":
-			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {_startStamp} bis zum {_stopStamp}.<br>"
+			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {month}.{year}.<br>"
 			_content = _content + "Alle weiteren Informationen sind in den Reports enthalten."
 		else:
 			_content = content
 
 
 		self.state = ReportState.CREATING
-		_thread = Thread(target=self._process, args=(_startStamp, _stopStamp, _subject, _content, createOnly))
+		_thread = Thread(target=self._process, args=(year, month, _subject, _content, createOnly))
 		_thread.start()
 
 		if not sendAsync:
@@ -273,20 +257,20 @@ class BasicReport:
 			#if not send async wait till done
 			_thread.join()
 
-	def _process(self, startStamp:datetime, stopStamp:datetime, subject:str, content:str, createOnly:bool):
+	def _process(self, year:int, month:int, subject:str, content:str, createOnly:bool):
 		"""
 		Thread to create and send the Report
 		"""
 
 		#Create the report
 		for _report in self.reports:
-			self._create(report=_report, startStamp=startStamp, stopStamp=stopStamp)
+			self._create(report=_report, year=year, month=month)
 
 		#Send the mail
 		if not createOnly: 
 			self._send(subject, content)
 
-	def _create(self, report:dict, startStamp:datetime, stopStamp:datetime) -> bool:
+	def _create(self, report:dict, year:int, month:int) -> bool:
 		"""
 		Call the reporter object with the requested settings and TimeSpan
 
@@ -297,14 +281,26 @@ class BasicReport:
 		Return: bool -> Will return true if report was successfully created
 		"""
 
+		#get the start and stop date
+		if report["schedule"] == "yearly":
+			_reportSchedule = Schedule.YEARLY
+		else:
+			_reportSchedule = Schedule.MONTHLY
+
 		self.state = ReportState.CREATING
 		_reportName = report["name"]
 
-		self.logger.info(f"Call the reporting function with start {startStamp} and end timestamp {stopStamp}")
+		#Get the start and stop time
+		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
+
+		_dayDelta = timedelta(days=1)
+		report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+
+		self.logger.info(f"Call the reporting function with start {_startStamp} and end timestamp {_stopStamp}")
 
 		#Call the reporting function
 		_reporter = Spreadsheet()
-		_reportSendFeedBack = _reporter.createReport(startDt=startStamp, endDt=stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
+		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
 
 		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
@@ -428,7 +424,7 @@ class User(BasicReport):
 		"""
 		Initialise the object
 		"""
-		super().__init__(name, tempFilePath, logLevel)        
+		super().__init__(name, tempFilePath, logLevel)
 		self.logger.debug("Init the user object")
 
 	def configure(self, elionaConfig:dict, userConfig:dict={})->bool:
