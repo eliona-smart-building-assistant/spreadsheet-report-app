@@ -68,7 +68,6 @@ class Spreadsheet:
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			elif reportSettings["type"] == "DataEntry":
-				#startDt = endDt - timedelta(days=1)
 				_reportCreatedSuccessfully = self.__createDataEntryReport(eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
 			else:
 				self.logger.error(f"Invalid report configuration: reports['type']={reportSettings['type']}")
@@ -136,8 +135,8 @@ class Spreadsheet:
 																									assetGai=_assetGai,
 																									assetId=_assetId, 
 																									attribute=str(_config["attribute"]), 
-																									startDateTime=endDateTime - timedelta(days=1), 
-																									endDateTime=endDateTime +_endTimeOffset,
+																									startDateTime= startDateTime, 
+																									endDateTime=startDateTime + timedelta(days=1),
 																									raster=_config["raster"],
 																									mode=_config["mode"],
 																									timeStampKey="TimeStamp",
@@ -148,7 +147,7 @@ class Spreadsheet:
 							_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
 
 							#Just get the right timestamp
-							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == endDateTime.strftime(_timeStampFormat) )]
+							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == startDateTime.strftime(_timeStampFormat) )]
 
 							#Set the Value to the Spreadsheet cell
 							if(_dataFrame.size > 0):
