@@ -372,7 +372,7 @@ class BasicReport:
 		if schedule == Schedule.YEARLY:
 
 			_startTime = datetime(year=(year -1), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
-			_endTime = datetime(year=(year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+			_endTime = datetime(year=(year-1), month=12, day=31, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
 
 		elif schedule == Schedule.MONTHLY:
 
