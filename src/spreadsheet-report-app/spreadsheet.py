@@ -1,5 +1,4 @@
 import os
-import argparse
 import json
 from json import JSONDecoder
 from openpyxl import load_workbook
@@ -240,7 +239,12 @@ class Spreadsheet:
 				if _raster == "MONTH":
 					while (_timeStamp <= endDateTime):
 						_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
-						_timeStamp = _timeStamp.replace(month=_timeStamp.month + 1)
+
+						if _timeStamp.month + 1 > 12:
+							_timeStamp = _timeStamp.replace(month = 1)
+							_timeStamp = _timeStamp.replace(year= _timeStamp.year + 1)
+						else:
+							_timeStamp = _timeStamp.replace(month=_timeStamp.month + 1)
 
 				else:
 					while (_timeStamp <= endDateTime):
@@ -256,13 +260,13 @@ class Spreadsheet:
 				
 
 
-				if "assetId" in _config: 
-					_assetId = int(_config["assetId"])
+				if "assetId" in _configDict[_columnName]: 
+					_assetId = int(_configDict[_columnName]["assetId"])
 				else:
 					_assetId = 0
 
-				if "assetGai" in _config:
-					_assetGai = _config["assetGai"]
+				if "assetGai" in _configDict[_columnName]:
+					_assetGai = _configDict[_columnName]["assetGai"]
 				else:
 					_assetGai = ""
 
@@ -278,19 +282,27 @@ class Spreadsheet:
 																						timeStampKey = _timeStampColumnName,
 																						valueKey=_columnName)
 
+
 				#Convert the data with the right timestamp format
 				_dataFrame[_timeStampColumnName] = pd.to_datetime(arg=_dataFrame[_timeStampColumnName]).dt.strftime(_timeStampFormat)
-
 				#Merge the Aggregated data with the current dataframe
 				_dataTable = pd.merge(_dataTable, _dataFrame, how='left', on=_timeStampColumnName)
-				
+
 			else:
 				self.logger.error("No valid table configuration.")
 
 		#Fill up the empty cells. First with the newer ones. In case the first row is empty we will also fill with the older ones up
-		if FILL_UP:
-			_dataTable = _dataTable.fillna(method="ffill")
-			_dataTable = _dataTable.fillna(method="bfill")
+		if "fillNone" in settings:
+			
+			if settings["fillNone"]:
+				_dataTable = _dataTable.fillna(method="ffill")
+				_dataTable = _dataTable.fillna(method="bfill")
+
+		else:
+
+			if FILL_UP:
+				_dataTable = _dataTable.fillna(method="ffill")
+				_dataTable = _dataTable.fillna(method="bfill")
 
 		#Write the data to file
 		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
@@ -398,7 +410,7 @@ class Spreadsheet:
 			# Dictionary will return True if not empty
 			if _retVal:
 
-				#Get the requested data and aquisition mode
+				#Get the requested data and acquisition mode
 				for _data in _retVal:
 
 					#write the info to the LOGGER
@@ -408,8 +420,7 @@ class Spreadsheet:
 						and mode in _data ):
 
 						_dataSet[_data["timestamp"]] = _data[mode]
-
-						_dataFrame = pd.concat([_dataFrame, pd.DataFrame([[_data["timestamp"], _data[mode]]], columns=(timeStampKey, valueKey))] )	
+						_dataFrame = pd.concat([_dataFrame, pd.DataFrame([[_data["timestamp"].replace(tzinfo=None), _data[mode]]], columns=(timeStampKey, valueKey))] )
 
 						self.logger.debug(	"Timestamp" + str(_data["timestamp"]) + " // AssetId:  " + 
 								str(_data["asset_id"]) + " // Attribute: " + str(_data["attribute"]) + 
