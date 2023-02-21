@@ -311,6 +311,15 @@ _**Example**_
 ```
 
 
+# Technical description
+
+
+## API calls
+
+To get the data we need to get the Asset ID and the aggregation ID to reduce to overhead for the retrieved aggregated data. Here is the workflow.
+
+![ApiFlow](./doc/ApiDataFlow.png)
+
 ## Temp file handling
 
 In order to send the data the reports will be created in an temporary folder. The report will only be created once if it needed to be send to multiple users. The handling of the temporary files will be like this:
