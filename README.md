@@ -50,13 +50,28 @@ With the configuration you can define every requested settings in order to set u
 |apiKey|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|
 |dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC offset as integer.|
 
-### Report Scheduler
+### Report Scheduler
 
-You can ether create an user based or report based schedule. If you like you can also mixe them together. 
+You can ether create an user based or report based schedule. If you like you can also mixe them together. The user based report will combine all reports to one attachment and send them to the required user. This will generate one mail per user even tho the user will receive multiple reports. With the report based schedule you will send one mail per report to different users. The mail will send by blind copy to every user. With this schedule one user may receive multiple mails. One mail for each report.
 
-The user based report will combine all reports to one attachment and send them to the required user. This will generate one mail per user even tho the user will receive multiple reports.
+|***Configuration***|***Description***|***Example***|
+|---|---|---|
+|name|Set the name of the report. Will be used in logs and the message as reference|Report solar energy building 001 yearly|
+|schedule|Set the schedule of the report. Yan be yearly or monthly. Will sent only once at the first day after 6 o'clock.|yearly / monthly|
+|type |Define the reporting style|"DataListSequential" = (List underneath)<br> "DataListParallel" = (List parallel)<br>  "DataEntry" = (Single entry in a cell)|
+|templateFile|Set the template file path|./templates/syn\_001.xlsx|
+|sheet|Sheet name only used if excel file type is used |Tabelle1, Sheet1|
+|fileType|Set the required data type|csv, xls, xlsx|
+|separator|Separator for csv used spreadsheets only|";" // "," // " "|  
+|firstRow|Define the first row to read data from. Default should be 0. The first row will always be ignored as an header|0|  
+|fromTemplate|Defines if the report template file will be copied and the data will be set to the cells. Should only be used with excel files. If true every formatting will be kept from the template.|true / false|
+|reportPath|Path of the generated report file. Should always be at "./tmp_reports/send"|./tmp_reports/send/report_001.xlsx |
+|receiver|List of users to receive the report||           
+|name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
+|msgType|Selected message type. Currently only eMail is available|email|
+|msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
+|fillNone|[optional] Fill the non existing data with previous ore following data. If True the previous value will be used. If not available the first available tailing value will be used. Default value is True|False|
 
-With the report based schedule you will send one mail per report to different users. The mail will send by blind copy to every user. With this schedule one user may receive multiple mails. One mail for each report.
 
 
 ### Reports  
@@ -94,6 +109,7 @@ With the report based schedule you will send one mail per report to different us
         "firstRow": "0",
         "fromTemplate": true,
         "reportPath": "./tmp_reports/send/report_002.csv",
+        "fillNone": false,
         "receiver": [
             {
                 "name": "FirstName LastName",
@@ -106,22 +122,78 @@ With the report based schedule you will send one mail per report to different us
 ```
 
 
-|***Configuration***|***Description***|***Example***|
-|---|---|---|
-|name|Set the name of the report. Will be used in logs and the message as reference|Report solar energy building 001 yearly|
-|schedule|Set the schedule of the report. Yan be yearly or monthly. Will sent only once at the first day after 6 o'clock.|yearly / monthly|
-|type |Define the reporting style|"DataListSequential" = (List underneath)<br> "DataListParallel" = (List parallel)<br>  "DataEntry" = (Single entry in a cell)|
-|templateFile|Set the template file path|./templates/syn\_001.xlsx|
-|sheet|Sheet name only used if excel file type is used |Tabelle1, Sheet1|
-|fileType|Set the required data type|csv, xls, xlsx|
-|separator|Separator for csv used spreadsheets only|";" // "," // " "|  
-|firstRow|Define the first row to read data from. Default should be 0. The first row will always be ignored as an header|0|  
-|fromTemplate|Defines if the report template file will be copied and the data will be set to the cells. Should only be used with excel files. If true every formatting will be kept from the template.|true / false|
-|reportPath|Path of the generated report file. Should always be at "./tmp_reports/send"|./tmp_reports/send/report_001.xlsx |
-|receiver|List of users to receive the report||           
-|name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
-|msgType|Selected message type. Currently only eMail is available|email|
-|msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
+
+### Users  
+
+```JSON
+
+"users": [
+    {
+        "name": "FirstName001 LastName001",
+        "msgType": "email",
+        "msgEndpoint": "firstName001.LastName001@company.ch",
+        "reports": [
+            {
+                "name": "Report 001",
+                "schedule": "monthly",
+                "type": "DataEntry",
+                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName001.xlsx",
+                "sheet": "Sheet1",
+                "separator":";",
+                "firstRow": "0",
+                "fromTemplate": true,
+                "reportPath": "Report_Name_001.xlsx",
+                "tempPath": ""
+            },
+            {
+                "name": "Report 002",
+                "schedule": "monthly",
+                "type": "DataEntry",
+                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName002.xlsx",
+                "sheet": "Sheet1",
+                "separator":";",
+                "firstRow": "0",
+                "fromTemplate": true,
+                "reportPath": "Report_Name_002.xlsx",
+                "tempPath": ""
+            }
+        ]
+    },
+    {
+        "name": "FirstName002 LastName002",
+        "msgType": "email",
+        "msgEndpoint": "firstName002.LastName002@company.ch",
+        "reports": [
+           {
+                "name": "Report 003",
+                "schedule": "monthly",
+                "type": "DataEntry",
+                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName003.xlsx",
+                "sheet": "Sheet1",
+                "separator":";",
+                "firstRow": "0",
+                "fromTemplate": true,
+                "reportPath": "Report_Name_003.xlsx",
+                "fillNone": false,
+                "tempPath": ""
+            },
+            {
+                "name": "Report 004",
+                "schedule": "monthly",
+                "type": "DataEntry",
+                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName004.xlsx",
+                "sheet": "Sheet1",
+                "separator":";",
+                "firstRow": "0",
+                "fromTemplate": true,
+                "reportPath": "Report_Name_004.xlsx",
+                "tempPath": ""
+            }
+ 
+        ]
+    }
+]
+```
 
 
 ## Templates
