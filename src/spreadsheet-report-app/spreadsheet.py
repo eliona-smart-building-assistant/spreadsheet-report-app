@@ -379,7 +379,6 @@ class Spreadsheet:
 
 		try:
 
-
 			_assetId = 0
 
 			if assetGai != "":
@@ -387,11 +386,12 @@ class Spreadsheet:
 				self.logger.info(	"get data from: assetGai:" + assetGai + " attribute:" + attribute + " start date:" + 
 									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
-
 				_retVal, part = eliona.get_data_aggregated(	asset_gai=assetGai, 
 															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
 															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
-															data_subtype="input")
+															data_subtype="input",
+															raster=raster,
+															attribute=attribute)
 				_assetId = eliona.get_asset_id(asset_gai=assetGai)
 			
 			elif assetId > 0 :
@@ -399,11 +399,12 @@ class Spreadsheet:
 				self.logger.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
 									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
-
 				_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
 															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
 															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
-															data_subtype="input")
+															data_subtype="input",
+															raster=raster,
+															attribute=attribute)
 				_assetId = assetId
 
 			
