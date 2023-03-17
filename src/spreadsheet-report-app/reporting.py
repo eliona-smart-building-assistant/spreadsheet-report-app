@@ -427,11 +427,21 @@ class User(BasicReport):
 		super().__init__(name, tempFilePath, logLevel)
 		self.logger.debug("Init the user object")
 
-	def configure(self, elionaConfig:dict, userConfig:dict={})->bool:
+	def configure(self, elionaConfig:dict, userConfig:dict={}, reportConfig:dict={})->bool:
 
-	
+		_reports = []
+
 		#Add the reports to the list
-		self.reports = userConfig["reports"]
+		for _ReportName in userConfig["reports"]:
+
+			for _reportConfig in reportConfig:
+				
+				if _reportConfig["name"] == _ReportName:
+
+					_reports.append(_reportConfig)
+
+		#Add the reports
+		self.reports = _reports
 
 		#Add the user to the list
 		self.blindCopyRecipients = None

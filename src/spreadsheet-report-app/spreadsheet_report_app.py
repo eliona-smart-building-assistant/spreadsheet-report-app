@@ -176,7 +176,7 @@ class Spreadsheet_report_app:
 						#Only update the configuration if we are in idle					
 						if _userObj.state == ReportState.IDLE:
 
-							_userObj.configure(elionaConfig=self.settings["eliona_handler"], userConfig=_user)
+							_userObj.configure(elionaConfig=self.settings["eliona_handler"], userConfig=_user, reportConfig=self.settings["reportConfig"])
 
 							_now = self._now()
 							self.logger.debug(f"current Timestamp: {_now}")
