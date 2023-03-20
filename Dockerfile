@@ -1,12 +1,12 @@
-FROM python:3.10.6-bullseye
+FROM python:3.11.2-alpine3.17
 
 #Add the needded data
-ADD KarlaKolumna.py .
+ADD ./src .
 ADD requirements.txt .
-ADD ./templates .
+ADD ./tmp_reports .
 
 #install the requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
 #Start the python application
-CMD [ "python", "./KarlaKolumna.py"]
+CMD [ "python", "./src/spreadsheet_report_app.py"]
