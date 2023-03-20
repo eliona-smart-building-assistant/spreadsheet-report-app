@@ -132,67 +132,45 @@ You can ether create an user based or report based schedule. If you like you can
         "name": "FirstName001 LastName001",
         "msgType": "email",
         "msgEndpoint": "firstName001.LastName001@company.ch",
-        "reports": [
-            {
-                "name": "Report 001",
-                "schedule": "monthly",
-                "type": "DataEntry",
-                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName001.xlsx",
-                "sheet": "Sheet1",
-                "separator":";",
-                "firstRow": "0",
-                "fromTemplate": true,
-                "reportPath": "Report_Name_001.xlsx",
-                "tempPath": ""
-            },
-            {
-                "name": "Report 002",
-                "schedule": "monthly",
-                "type": "DataEntry",
-                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName002.xlsx",
-                "sheet": "Sheet1",
-                "separator":";",
-                "firstRow": "0",
-                "fromTemplate": true,
-                "reportPath": "Report_Name_002.xlsx",
-                "tempPath": ""
-            }
-        ]
+        "reports": ["Report 003"]
     },
     {
         "name": "FirstName002 LastName002",
         "msgType": "email",
         "msgEndpoint": "firstName002.LastName002@company.ch",
-        "reports": [
-           {
-                "name": "Report 003",
-                "schedule": "monthly",
-                "type": "DataEntry",
-                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName003.xlsx",
-                "sheet": "Sheet1",
-                "separator":";",
-                "firstRow": "0",
-                "fromTemplate": true,
-                "reportPath": "Report_Name_003.xlsx",
-                "fillNone": false,
-                "tempPath": ""
-            },
-            {
-                "name": "Report 004",
-                "schedule": "monthly",
-                "type": "DataEntry",
-                "templateFile": "./tmp_reports/Cust_Config/Template_ReportName004.xlsx",
-                "sheet": "Sheet1",
-                "separator":";",
-                "firstRow": "0",
-                "fromTemplate": true,
-                "reportPath": "Report_Name_004.xlsx",
-                "tempPath": ""
-            }
+        "reports": ["Report 003", "Report 004"]
+    }
  
-        ]
+]
+
+"reportConfig": [
+    {
+        "name": "Report 003",
+        "schedule": "monthly",
+        "type": "DataEntry",
+        "templateFile": "./tmp_reports/Cust_Config/Template_ReportName003.xlsx",
+        "sheet": "Sheet1",
+        "separator":";",
+        "firstRow": "0",
+        "fromTemplate": true,
+        "reportPath": "Report_Name_003.xlsx",
+        "fillNone": false,
+        "tempPath": ""
+    },
+    {
+        "name": "Report 004",
+        "schedule": "monthly",
+        "type": "DataEntry",
+        "templateFile": "./tmp_reports/Cust_Config/Template_ReportName004.xlsx",
+        "sheet": "Sheet1",
+        "separator":";",
+        "firstRow": "0",
+        "fromTemplate": true,
+        "reportPath": "Report_Name_004.xlsx",
+        "tempPath": ""
     }
 ]
+
 ```
 
 
