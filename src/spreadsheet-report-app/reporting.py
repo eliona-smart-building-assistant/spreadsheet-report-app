@@ -8,6 +8,7 @@ from mail import Mail
 from spreadsheet import Spreadsheet
 from threading import Thread
 from datetime import datetime, timedelta, timezone
+import pytz
 from enums import Schedule, ReportState
 from typing import Tuple
 import unicodedata
@@ -291,7 +292,7 @@ class BasicReport:
 		_reportName = report["name"]
 
 		#Get the start and stop time
-		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, utcDelta=self.elionaConfig["dbTimeZone"], year=year, month=month)
+		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
 		_dayDelta = timedelta(days=1)
 		report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
@@ -349,7 +350,7 @@ class BasicReport:
 		else:
 			self.state = ReportState.CANCELED
 
-	def _getReportTimeSpan(self, schedule:Schedule, utcDelta:int, year:int, month:int=1) -> Tuple[datetime, datetime]:
+	def _getReportTimeSpan(self, schedule:Schedule, timeZone:str, year:int, month:int=1) -> Tuple[datetime, datetime]:
 		"""
 		Will return the last time span depending on the schedule settings
 
@@ -366,7 +367,7 @@ class BasicReport:
 
 		_startTime = datetime(1979, 1, 1)
 		_endTime = datetime(1979, 1, 1)
-		_timeZone = timezone(timedelta(hours=utcDelta), "BER")
+		_timeZone = pytz.timezone(timeZone)
 
 
 		if schedule == Schedule.YEARLY:
