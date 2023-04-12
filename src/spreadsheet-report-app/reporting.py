@@ -27,6 +27,11 @@ class BasicReport:
 
 	name=""
 
+	loggerLevel = log.LOG_LEVEL_INFO
+	"""
+	Logger level fall dependencies
+	"""
+
 	logger = log.createLogger("BASE Send class", loglevel=LOGGER_LEVEL)
 	"""
 	Logger fo the sending class
@@ -300,7 +305,7 @@ class BasicReport:
 		self.logger.info(f"Call the reporting function with start {_startStamp} and end timestamp {_stopStamp}")
 
 		#Call the reporting function
-		_reporter = Spreadsheet()
+		_reporter = Spreadsheet(logLevel=self.loggerLevel)
 		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
 

@@ -61,7 +61,9 @@ class Spreadsheet_report_app:
 					"lastSend": {"type": "string"}
 				}]}
 
-	logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=LOGGER_LEVEL)
+	loggerLevel = log.LOG_LEVEL_INFO
+	logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=log.LOG_LEVEL_INFO)
+
 	settings = {}
 	settingsPath = ""
 	storagePath = "./state.json"
@@ -75,8 +77,18 @@ class Spreadsheet_report_app:
 		"""
 		Initialize the class
 		"""
-		#logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-		#self.logger = logging.getLogger(f'{self.logger}.{__name__}')
+		# Init the logger
+		if loggingLevel  == "DEBUG":
+			self.loggerLevel = log.LOG_LEVEL_DEBUG
+		elif loggingLevel  == "ERROR":
+			self.loggerLevel = log.LOG_LEVEL_ERROR
+		elif loggingLevel  == "WARNING":
+			self.loggerLevel = log.LOG_LEVEL_WARNING
+		elif loggingLevel  == "INFO":
+			self.loggerLevel = log.LOG_LEVEL_INFO
+
+		self.logger.setLevel(self.loggerLevel)
+
 		self.logger.info("--------Init--------")
 
 		self.settingsPath = settingsPath

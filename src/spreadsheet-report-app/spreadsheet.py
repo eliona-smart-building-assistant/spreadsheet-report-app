@@ -383,7 +383,7 @@ class Spreadsheet:
 
 			if assetGai != "":
 
-				self.logger.info(	"get data from: assetGai:" + assetGai + " attribute:" + attribute + " start date:" + 
+				self.logger.debug(	"get data from: assetGai:" + assetGai + " attribute:" + attribute + " start date:" + 
 									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
 				_retVal, part = eliona.get_data_aggregated(	asset_gai=assetGai, 
@@ -396,7 +396,7 @@ class Spreadsheet:
 			
 			elif assetId > 0 :
 
-				self.logger.info(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
+				self.logger.debug(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
 									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
 
 				_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
