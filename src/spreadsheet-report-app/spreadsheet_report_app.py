@@ -12,12 +12,13 @@ from reporting import User, Report
 import utils.logger as log
 
 
-SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
+
 LOGGER_NAME = "Scheduler"
-LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
 SLEEP_TILL_NEXT_REQUEST = 1
-TESTING_ENABLED = True
-TEMP_ATTACHMENT_PATH = "./tmp_reports/send/"
+
+
+DEFAULT_SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
+
 
 class Spreadsheet_report_app:
 
@@ -66,14 +67,15 @@ class Spreadsheet_report_app:
 
 	settings = {}
 	settingsPath = ""
-	storagePath = "./state.json"
+	sendTmpPath = ""
+	storagePath = ""
 	testing = True	
 	timeTable = []
 	timeIndex = 0
 	users:dict[str, User] = {}
 	reports:dict[str, Report] = {}
 
-	def __init__(self, settingsPath:str) -> None:
+	def __init__(self, settingsPath:str, storagePath:str, testingEnable:bool, loggingLevel:str) -> None:
 		"""
 		Initialize the class
 		"""
@@ -91,10 +93,15 @@ class Spreadsheet_report_app:
 
 		self.logger.info("--------Init--------")
 
+		# Set the settings path
 		self.settingsPath = settingsPath
 
+		self.storagePath = storagePath
+		self.sendTmpPath = storagePath + "send/"
+		self._dirHandling(path=self.sendTmpPath)
+
 		#Initially delete the temp files after start up. 
-		self._deleteOldTempFiles(path=TEMP_ATTACHMENT_PATH, force=True)
+		self._deleteOldTempFiles(path=self.sendTmpPath, force=True)
 
 		if TESTING_ENABLED:
 		
@@ -108,6 +115,7 @@ class Spreadsheet_report_app:
 
 					if line.strip() != "":
 						self.timeTable.append(datetime.strptime(line.replace("\n", ""), dateTimeStrFormat))
+
 
 	def run(self, args) -> None:
 		"""
@@ -135,8 +143,8 @@ class Spreadsheet_report_app:
 			_storeNewData = False
 
 			#Read the Settings file and validate it
-			self.logger.info("--------read the settings--------")
-			self.settings, _settingsAreValid = self._readJSonFile(self.settingsPath, self.SETTINGS_SCHEME)
+			self.logger.debug("--------read the settings--------")
+			self.settings, _settingsAreValid = self._readSettings(self.settingsPath, self.SETTINGS_SCHEME)
 
 			#If Settings are valid we will read them and perform the actions
 			if _settingsAreValid:
@@ -151,7 +159,7 @@ class Spreadsheet_report_app:
 
 						if not(_reportName in self.reports):
 							#Create the report object if not already created
-							self.reports[_reportName] = Report(name=_reportName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
+							self.reports[_reportName] = Report(name=_reportName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel)
 
 						_reportObj = self.reports[_reportName]
 
@@ -181,7 +189,7 @@ class Spreadsheet_report_app:
 
 						if not(_userName in self.users):
 							#Create the report object if not already created
-							self.users[_userName] = User(name=_userName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
+							self.users[_userName] = User(name=_userName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel)
 
 						_userObj = self.users[_userName]
 
@@ -203,7 +211,7 @@ class Spreadsheet_report_app:
 				self.logger.error("Skipped the Create report process due to errors in the settings")
 
 			#Check for files to delete
-			self._deleteOldTempFiles(path=TEMP_ATTACHMENT_PATH)
+			self._deleteOldTempFiles(path=self.sendTmpPath)
 
 
 			self.logger.debug(f"Sleep for {SLEEP_TILL_NEXT_REQUEST} seconds")

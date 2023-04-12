@@ -96,6 +96,9 @@ class BasicReport:
 	"""
 
 	tempFilePath = ""
+	"""
+	Filepath for temporary created spreadsheet files
+	"""
 
 	testing = True
 	currentTestTime:datetime
@@ -121,7 +124,9 @@ class BasicReport:
 		self.mailHandler = Mail(logLevel=logLevel)
 
 		#Set the temp storage
-		self.storePath = f"./tmp_reports/storage/{_fileName}.json"
+		_storePath = tempFilePath + "lastSend/"
+		self._dirHandling(_storePath)
+		self.storePath = f"{_storePath}{_fileName}.json"
 		self.readStorage()
 		
 		self.tempFilePath = tempFilePath
@@ -419,6 +424,31 @@ class BasicReport:
 			value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
 		value = re.sub(r'[^\w\s-]', '', value.lower())
 		return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+	def _dirHandling(self, path) -> bool:
+		"""
+		Check if path exists otherwise try to create it
+
+		Params
+		-----
+		path:str	= Path to check / create
+		Return
+		-----
+		Will Return True if Path is available // Will return False if Path is not available
+		"""
+		_retVal = False
+		
+		if not os.path.exists(path):
+
+			try:
+				os.makedirs(path)
+				_retVal = True
+			except:
+				self.logger.error("Could not create directory. Please check permissions")
+
+		return _retVal
+
+
 
 class User(BasicReport):
 	"""
