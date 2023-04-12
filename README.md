@@ -24,6 +24,29 @@ Those are the required steps to get started.
 - Create an docker container
 - Deploy your app 
 
+## Environment Variables
+
+```Shell
+# Connection configuration
+HOST_DOMAIN="https://customer.eliona.cloud"
+API_ENDPOINT="https://customer.eliona.cloud/api/v2"
+API_TOKEN = "The super secure api token"
+SSL_VERIFY="True"
+
+# Customer configuration
+CUSTOMER_NAME="Customer"
+TZ="Europe/Zurich"
+
+# App Configuration
+APP_NAME="Spreadsheet-Report-App"
+SETTINGS_PATH = "./storage/config/config.json"
+STORAGE_PATH = "./tmp_reports/reports/"
+
+# Testing and debugging
+LOG_LEVEL = "INFO"
+TESTING_ENABLED = "False"
+```
+
 ## Konfiguration
 
 ![FileFlow](./doc/FileFlow.png)
@@ -290,6 +313,19 @@ _**Example**_
 
 
 # Technical description
+
+# Call the Python Script
+
+In Order to debug and Test the Script it can be called with these Parameters:
+
+```console
+python ./src/spreadsheet-report-app/spreadsheet_report_app.py -m runtime -c ./storage/config/config.json -s ./storage/reports/ -l INFO -t True
+```
+
+If you would like to call a single User or Report you can use:
+
+python ./src/spreadsheet-report-app/spreadsheet_report_app.py -m single -c ./storage/config/config.json -s ./storage/reports/ -l INFO -t False
+
 
 
 ## API calls

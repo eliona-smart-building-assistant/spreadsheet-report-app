@@ -140,6 +140,9 @@ Documents/.DS_Store
 
 # Ignore temp reports
 /tmp_reports/*
+/tmp
+/storage
+
 
 
 # Ignore the storeage of the allready send reports

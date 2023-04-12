@@ -103,7 +103,7 @@ class Spreadsheet_report_app:
 		#Initially delete the temp files after start up. 
 		self._deleteOldTempFiles(path=self.sendTmpPath, force=True)
 
-		if TESTING_ENABLED:
+		if testingEnable:
 		
 			dateTimeStrFormat =  "%d-%m-%Y %H:%M:%S"
 			
@@ -217,7 +217,7 @@ class Spreadsheet_report_app:
 			self.logger.debug(f"Sleep for {SLEEP_TILL_NEXT_REQUEST} seconds")
 			time.sleep(SLEEP_TILL_NEXT_REQUEST)
 
-	def _readJSonFile(self, settingsPath : str, settingsScheme:dict) -> Tuple[dict, bool]:
+	def _readSettings(self, settingsPath : str, settingsScheme:dict) -> Tuple[dict, bool]:
 		"""
 		# read the settings and store them in the class variables
 
@@ -234,6 +234,17 @@ class Spreadsheet_report_app:
 			#Read the configuration file 
 			with open(settingsPath, "r") as settingsFile:
 				settingsJson = json.load(settingsFile)
+
+
+			#Get the environments variables if the values are not available or empty
+			settingsJson["eliona_handler"]["host"] = settingsJson["eliona_handler"].get("host", os.environ.get("HOST_DOMAIN")) 
+			settingsJson["eliona_handler"]["api"] = settingsJson["eliona_handler"].get("api", os.environ.get("API_ENDPOINT"))
+			settingsJson["eliona_handler"]["apiKey"] = settingsJson["eliona_handler"].get("apiKey", os.environ.get("API_TOKEN"))
+			settingsJson["eliona_handler"]["dbTimeZone"] = settingsJson["eliona_handler"].get("dbTimeZone", os.environ.get("TZ"))
+			settingsJson["eliona_handler"]["sslVerify"] = settingsJson["eliona_handler"].get("sslVerify", json.loads(os.environ.get("SSL_VERIFY").lower()))	#Take the way with json to convert the data to boolean
+
+			self.logger.debug(type(settingsJson["eliona_handler"]["sslVerify"]))
+			self.logger.debug(settingsJson["eliona_handler"]["sslVerify"])
 
 			#Check if validate
 			_settingIsValid = self._validateJson(settingsFile, settingsScheme)
@@ -353,62 +364,79 @@ class Spreadsheet_report_app:
 
 				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
-	def _singleExport(self, arguments):
+	def _singleExport(self, reportDate:str, reportName:str="", userName:str=""):
+		"""
+		Create an report for a single timestamp by user or report
 
-		#Try to get the arguments
-		try:
-			_reportName = arguments.report
-			_userName = arguments.user
-			_date = datetime.strptime(arguments.date, "%d.%m.%Y").date()
-			_configPath = arguments.config
-			_outputPath = arguments.output
+		Params
+		-----
+		reportDate:str			Date of the report
+		reportName:str			[Optional] Report name
+		userName:str			[Optional] User name
 
-		except Exception as err:
-			print("Error occurred reading the arguments. Enter -h or --help to get a help for the arguments.")
-			print(str(err))
-			exit()
-
-
-		#Set the config path
-		if _configPath == None:
-			_configPath = SETTINGS_PATH
+		Return
+		-----
+		- No return Value
+		"""
 
 		#Read the settings file
 		_settingsJson = {}
-		if os.path.isfile(_configPath):
+		if os.path.isfile(self.settingsPath):
 
 			#Read the configuration file 
-			with open(_configPath, "r") as settingsFile:
+			with open(self.settingsPath, "r") as settingsFile:
 				_settingsJson = json.load(settingsFile)
 
 		#Set the Output path
-		if _outputPath == None:
-			_outputPath = "./tmp_reports/manual_created/"
+		_outputPath = self.storagePath +"manual_created/"
 
 
 		#Get the reports
-		if _userName != None:
+		if userName != None:
 
 			#Get the requested user			
 			for _user in _settingsJson["users"]:
 
-				if _userName == _user["name"]: 				
+				if userName == _user["name"]: 				
 
-					_userObj = User(name=_userName, tempFilePath=_outputPath, logLevel=LOGGER_LEVEL)
+					_userObj = User(name=userName, tempFilePath=_outputPath, logLevel=self.loggerLevel)
 					_userObj.configure(elionaConfig=_settingsJson["eliona_handler"], userConfig=_user)
-					_userObj.sendReport(year=_date.year, month=_date.month, createOnly=True, sendAsync=False)
+					_userObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
 
 
-		elif _reportName != None:
+		elif reportName != None:
 
 			#Get the requested report
 			for _report in self.settings["reports"]:
 				
-				if _reportName == _report["name"]:
+				if reportName == _report["name"]:
 
-					_reportObj = Report(name=_reportName, tempFilePath=TEMP_ATTACHMENT_PATH, logLevel=LOGGER_LEVEL)
+					_reportObj = Report(name=reportName, tempFilePath=_outputPath, logLevel=self.loggerLevel)
 					_reportObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report)
-					_reportObj.sendReport(year=_date.year, month=_date.month, createOnly=True, sendAsync=False)
+					_reportObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
+
+	def _dirHandling(self, path) -> bool:
+		"""
+		Check if path exists otherwise try to create it
+
+		Params
+		-----
+		path:str	= Path to check / create
+		Return
+		-----
+		Will Return True if Path is available // Will return False if Path is not available
+		"""
+		_retVal = False
+		
+		if not os.path.exists(path):
+
+			try:
+				os.makedirs(path)
+				_retVal = True
+			except:
+				self.logger.error("Could not create directory. Please check permissions")
+
+		return _retVal
 
 
 if __name__ == "__main__":
@@ -427,16 +455,75 @@ if __name__ == "__main__":
 	"""
 	#parse the arguments
 	_argumentParser = argparse.ArgumentParser()
-	_argumentParser.add_argument("-d", "--date", type=str, required=False, help="Date in the format: dd.mm.yyyy")
+	_argumentParser.add_argument("-m", "--mode", type=str, required=False, help="Operation mode. possible values 'single' or 'runtime'")
 	_argumentParser.add_argument("-c", "--config", type=str, required=False, help="Path to the used configuration file. For Example: \"./config/config.json\"")
-	_argumentParser.add_argument("-u", "--user", type=str, required=False, help="User name that's requested. Name can be read from config.json file.")
-	_argumentParser.add_argument("-r", "--report", type=str, required=False, help="Report name that's requested. Name can be read from config.json file.")
-	_argumentParser.add_argument("-o", "--output", type=str, required=False, help="Export file path. If empty will be stored under \"./temp/file_name\"")
+	_argumentParser.add_argument("-s", "--storage", type=str, required=False, help="Storage file path")
+	_argumentParser.add_argument("-l", "--logging", type=str, required=False, help="Logging mode. Possible values: 'DEBUG', 'INFO', 'ERROR', 'WARNING'")
+	_argumentParser.add_argument("-t", "--testing", type=bool, required=False, help="'Runtime Mode only': True: will enable the Testing with a given timetable under STORAGE_PATH/testing/timetable.txt")
+	_argumentParser.add_argument("-r", "--report", type=str, required=False, help="'Single Mode only': Report name that's requested. Name can be read from config.json file.")
+	_argumentParser.add_argument("-u", "--user", type=str, required=False, help="'Single Mode only': User name that's requested. Name can be read from config.json file.")
+	_argumentParser.add_argument("-d", "--date", type=str, required=False, help="'Single Mode only': Date in the format: dd.mm.yyyy")
 	_args = _argumentParser.parse_args()
 
+
+	# No arguments received. We will use the .env file	
 	if len(sys.argv) <= 1:
-		mainApp = Spreadsheet_report_app( SETTINGS_PATH)
+
+		_envDict = {} #Create the environment dict with all params
+
+		mainApp = Spreadsheet_report_app(settingsPath=_envDict["config"])
 		mainApp.run(sys.argv)
+
 	else:
-		mainApp = Spreadsheet_report_app( SETTINGS_PATH)
-		mainApp._singleExport(_args)
+		_argDict = {}
+
+		#Try to get the arguments
+		try:
+
+			_argDict["mode"] = _args.mode.strip()
+			
+			if _args.config:
+				_argDict["config"] = _args.config
+			else:
+				_argDict["config"] = os.environ.get("SETTINGS_PATH") 
+
+			if _args.storage:
+				_argDict["storage"] = _args.storage
+			else:
+				_argDict["storage"] = os.environ.get("STORAGE_PATH")
+
+			if _args.testing:
+				_argDict["testing"] = _args.testing
+			else:
+				_argDict["testing"] = os.environ.get("TESTING_ENABLED") 
+
+			if _args.logging:
+				_argDict["logging"] = _args.logging		
+			else:
+				_argDict["logging"] = os.environ.get("LOG_LEVEL")
+
+
+			# Get the single specific params 
+			if _argDict["mode"] == "single":
+				_argDict["date"] = datetime.strptime(_args.date, "%d.%m.%Y").date()
+				_argDict["user"] = _args.user
+				_argDict["report"] = _args.report
+				_argDict["testing"] = False
+
+		except Exception as err:
+			print("Error occurred reading the arguments. Enter -h or --help to get a help for the arguments.")
+			print(str(err))
+			exit()
+
+		print( os.environ.get("API_TOKEN"))
+
+		# Create the object wit al required information
+		mainApp = Spreadsheet_report_app(	settingsPath=_argDict.get("config"), 
+				   							storagePath=_argDict.get("storage"), 
+											testingEnable=_argDict.get("testing"), 
+											loggingLevel=_argDict.get("logging"))
+
+		if _argDict["mode"] == "runtime":
+			mainApp.run(_args)
+		elif _argDict["mode"] == "single":
+			mainApp._singleExport(_args)
