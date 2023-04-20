@@ -103,7 +103,7 @@ class BasicReport:
 	testing = True
 	currentTestTime:datetime
 
-	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
+	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
 		Init the class
 
@@ -114,6 +114,7 @@ class BasicReport:
 		-> None
 		"""
 
+		self.testing = testing
 		self.name = name
 		_fileName = self._slugify(value=name)
 
@@ -456,11 +457,11 @@ class User(BasicReport):
 	"""
 
 	
-	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
+	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
 		Initialise the object
 		"""
-		super().__init__(name, tempFilePath, logLevel)
+		super().__init__(name, tempFilePath, logLevel, testing)
 		self.logger.debug("Init the user object")
 
 	def configure(self, elionaConfig:dict, userConfig:dict={}, reportConfig:dict={})->bool:
@@ -529,12 +530,12 @@ class Report(BasicReport):
 	Object to handle all reports for one user
 	"""
 
-	def __init__(self, name:str, tempFilePath:str, logLevel:int) -> None:
+	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
 		Initialise the object
 		"""
 
-		super().__init__(name, tempFilePath, logLevel)        
+		super().__init__(name, tempFilePath, logLevel, testing)
 		self.logger.debug("Init the report object")
 
 	def configure(self, elionaConfig:dict, reportConfig:dict)->bool:

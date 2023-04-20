@@ -160,7 +160,7 @@ class Spreadsheet_report_app:
 
 						if not(_reportName in self.reports):
 							#Create the report object if not already created
-							self.reports[_reportName] = Report(name=_reportName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel)
+							self.reports[_reportName] = Report(name=_reportName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel, testing=self.testing)
 
 						_reportObj = self.reports[_reportName]
 
@@ -190,7 +190,7 @@ class Spreadsheet_report_app:
 
 						if not(_userName in self.users):
 							#Create the report object if not already created
-							self.users[_userName] = User(name=_userName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel)
+							self.users[_userName] = User(name=_userName, tempFilePath=self.sendTmpPath, logLevel=self.loggerLevel, testing=self.testing)
 
 						_userObj = self.users[_userName]
 
@@ -400,7 +400,7 @@ class Spreadsheet_report_app:
 
 				if userName == _user["name"]: 				
 
-					_userObj = User(name=userName, tempFilePath=_outputPath, logLevel=self.loggerLevel)
+					_userObj = User(name=userName, tempFilePath=_outputPath, logLevel=self.loggerLevel, testing=self.testing)
 					_userObj.configure(elionaConfig=_settingsJson["eliona_handler"], userConfig=_user)
 					_userObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
 
@@ -412,7 +412,7 @@ class Spreadsheet_report_app:
 				
 				if reportName == _report["name"]:
 
-					_reportObj = Report(name=reportName, tempFilePath=_outputPath, logLevel=self.loggerLevel)
+					_reportObj = Report(name=reportName, tempFilePath=_outputPath, logLevel=self.loggerLevel, testing=self.testing)
 					_reportObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report)
 					_reportObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
 
