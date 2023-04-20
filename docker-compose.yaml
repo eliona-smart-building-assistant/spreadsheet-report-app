@@ -1,6 +1,6 @@
 version: '3'
 services:
-  my_component:
+  spreadsheet-report-app:
     # Here you can specify an env-file with variables
     # that can be used in the docker-container,
     # BUT these variables can not be used here in the
