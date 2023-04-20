@@ -460,7 +460,7 @@ if __name__ == "__main__":
 	_argumentParser.add_argument("-c", "--config", type=str, required=False, help="Path to the used configuration file. For Example: \"./config/config.json\"")
 	_argumentParser.add_argument("-s", "--storage", type=str, required=False, help="Storage file path")
 	_argumentParser.add_argument("-l", "--logging", type=str, required=False, help="Logging mode. Possible values: 'DEBUG', 'INFO', 'ERROR', 'WARNING'")
-	_argumentParser.add_argument("-t", "--testing", type=bool, required=False, help="'Runtime Mode only': True: will enable the Testing with a given timetable under STORAGE_PATH/testing/timetable.txt")
+	_argumentParser.add_argument("-t", "--testing", type=str, required=False, help="'Runtime Mode only': True: will enable the Testing with a given timetable under STORAGE_PATH/testing/timetable.txt")
 	_argumentParser.add_argument("-r", "--report", type=str, required=False, help="'Single Mode only': Report name that's requested. Name can be read from config.json file.")
 	_argumentParser.add_argument("-u", "--user", type=str, required=False, help="'Single Mode only': User name that's requested. Name can be read from config.json file.")
 	_argumentParser.add_argument("-d", "--date", type=str, required=False, help="'Single Mode only': Date in the format: dd.mm.yyyy")
@@ -494,9 +494,9 @@ if __name__ == "__main__":
 				_argDict["storage"] = os.environ.get("STORAGE_PATH")
 
 			if _args.testing:
-				_argDict["testing"] = _args.testing
+				_argDict["testing"] = json.loads(_args.testing.lower())
 			else:
-				_argDict["testing"] = os.environ.get("TESTING_ENABLED") 
+				_argDict["testing"] = json.loads(os.environ.get("TESTING_ENABLED", "false").lower()) 
 
 			if _args.logging:
 				_argDict["logging"] = _args.logging		
