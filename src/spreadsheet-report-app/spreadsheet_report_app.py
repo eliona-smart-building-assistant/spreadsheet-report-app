@@ -242,7 +242,7 @@ class Spreadsheet_report_app:
 			settingsJson["eliona_handler"]["api"] = settingsJson["eliona_handler"].get("api", os.environ.get("API_ENDPOINT"))
 			settingsJson["eliona_handler"]["apiKey"] = settingsJson["eliona_handler"].get("apiKey", os.environ.get("API_TOKEN"))
 			settingsJson["eliona_handler"]["dbTimeZone"] = settingsJson["eliona_handler"].get("dbTimeZone", os.environ.get("TZ"))
-			settingsJson["eliona_handler"]["sslVerify"] = settingsJson["eliona_handler"].get("sslVerify", json.loads(os.environ.get("SSL_VERIFY").lower()))	#Take the way with json to convert the data to boolean
+			settingsJson["eliona_handler"]["sslVerify"] = settingsJson["eliona_handler"].get("sslVerify", json.loads(os.environ.get("SSL_VERIFY", "false").lower()))	#Take the way with json to convert the data to boolean
 
 			self.logger.debug(type(settingsJson["eliona_handler"]["sslVerify"]))
 			self.logger.debug(settingsJson["eliona_handler"]["sslVerify"])
