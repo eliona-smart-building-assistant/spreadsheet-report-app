@@ -103,7 +103,8 @@ class Spreadsheet_report_app:
 		#Initially delete the temp files after start up. 
 		self._deleteOldTempFiles(path=self.sendTmpPath, force=True)
 
-		if testingEnable:
+		self.testing = testingEnable
+		if self.testing:
 		
 			dateTimeStrFormat =  "%d-%m-%Y %H:%M:%S"
 			
