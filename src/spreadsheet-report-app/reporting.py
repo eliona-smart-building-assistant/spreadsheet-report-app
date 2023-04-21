@@ -118,11 +118,14 @@ class BasicReport:
 		self.name = name
 		_fileName = self._slugify(value=name)
 
+		#Set the Log Level 
+		self.loggerLevel = logLevel
+
 		#Update the log handler
-		self.logger.setLevel(logLevel)
+		self.logger.setLevel(self.loggerLevel)
 		self.logger.name = self.name
 
-		self.mailHandler = Mail(logLevel=logLevel)
+		self.mailHandler = Mail(logLevel=self.loggerLevel)
 
 		#Set the temp storage
 		_storePath = tempFilePath + "lastSend/"
