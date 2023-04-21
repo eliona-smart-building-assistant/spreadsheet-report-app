@@ -380,28 +380,29 @@ class Spreadsheet:
 		try:
 
 			_assetId = 0
+			_utcOffset = int(startDateTime.utcoffset().total_seconds()/3600)
+			_startDate = (startDateTime-timedelta(hours=_utcOffset + 1)).isoformat()
+			_endDate = (endDateTime+timedelta(hours=_utcOffset + 1)).isoformat()
 
 			if assetGai != "":
 
-				self.logger.debug(	"get data from: assetGai:" + assetGai + " attribute:" + attribute + " start date:" + 
-									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
+				self.logger.debug(f"get data from: assetGai: {assetGai} // attribute: {attribute} // raster: {raster} // start date: {_startDate} // end date: {_endDate}")
 
 				_retVal, part = eliona.get_data_aggregated(	asset_gai=assetGai, 
-															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
-															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
+															from_date=_startDate, 
+															to_date=_endDate, 
 															data_subtype="input",
 															raster=raster,
 															attribute=attribute)
 				_assetId = eliona.get_asset_id(asset_gai=assetGai)
-			
+
 			elif assetId > 0 :
 
-				self.logger.debug(	"get data from: assetId:" + str(assetId) + " attribute:" + attribute + " start date:" + 
-									startDateTime.isoformat() + " end date:" + endDateTime.isoformat() )
+				self.logger.debug(f"get data from: assetGai: {assetGai} // attribute: {attribute} // raster: {raster} // start date: {_startDate} // end date: {_endDate}")
 
 				_retVal, part = eliona.get_data_aggregated(	asset_id=assetId, 
-															from_date=(startDateTime-timedelta(seconds=1)).isoformat(), 
-															to_date=(endDateTime+timedelta(seconds=1)).isoformat(), 
+															from_date=_startDate, 
+															to_date=_endDate, 
 															data_subtype="input",
 															raster=raster,
 															attribute=attribute)
