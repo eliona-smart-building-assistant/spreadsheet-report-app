@@ -14,7 +14,7 @@ import utils.logger as log
 
 
 LOGGER_NAME = "Scheduler"
-SLEEP_TILL_NEXT_REQUEST = 1
+SLEEP_TILL_NEXT_REQUEST = 3600
 
 
 DEFAULT_SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
