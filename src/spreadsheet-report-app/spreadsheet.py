@@ -364,7 +364,7 @@ class Spreadsheet:
 		assetId:int = Asset ID to get the data from
 		attribute:str = Attribute from the Asset to read the data from
 		startDateTime:datetime = Start point from which we create an dictionary entry every time tick  
-		endDateTime:datetime = End pint for the dictionary
+		endDateTime:datetime = End point for the dictionary
 		tick:timedelta = pipeline raster to search for.
 
 		Return
