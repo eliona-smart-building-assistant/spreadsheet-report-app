@@ -386,19 +386,19 @@ class BasicReport:
 
 		if schedule == Schedule.YEARLY:
 
-			_startTime = datetime(year=(year -1), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
-			_endTime = datetime(year=(year-1), month=12, day=31, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+			_startTime = datetime(year=(year -1), month=1, day=1)
+			_endTime = datetime(year=(year-1), month=12, day=31)
 
 		elif schedule == Schedule.MONTHLY:
 
 			if (month == 1):
 
-				_startTime = datetime(year=(year - 1), month=12, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
-				_endTime = datetime(year=(year), month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+				_startTime = datetime(year=(year - 1), month=12, day=1)
+				_endTime = datetime(year=(year), month=1, day=1)
 
 			else:
-				_startTime = datetime(year=(year), month=(month - 1), day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
-				_endTime = datetime(year=(year), month=(month), day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_timeZone)
+				_startTime = datetime(year=(year), month=(month - 1), day=1)
+				_endTime = datetime(year=(year), month=(month), day=1)
 
 		elif schedule == Schedule.WEEKLY:
 
@@ -410,6 +410,11 @@ class BasicReport:
 
 		else:
 			self.logger.error("Could define time span for schedule: {schedule}")
+
+
+		_startTime = _startTime.astimezone(_timeZone)
+		_endTime = _endTime.astimezone(_timeZone)
+
 
 		return (_startTime, _endTime)
 
