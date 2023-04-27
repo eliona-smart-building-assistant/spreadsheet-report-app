@@ -26,7 +26,9 @@ LOG_LEVEL_ERROR   = logging.ERROR
 
 LOG_DEFAULT_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-logging.basicConfig(filename="log.log", encoding="utf-8", format=LOG_DEFAULT_FORMAT)
+#For debug purposes only
+#logging.basicConfig(filename="log.log", encoding="utf-8", format=LOG_DEFAULT_FORMAT)
+logging.basicConfig(encoding="utf-8", format=LOG_DEFAULT_FORMAT)
 
 def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
     """ Create a logger using std out and a specific format.
