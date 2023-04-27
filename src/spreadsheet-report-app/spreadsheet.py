@@ -214,6 +214,8 @@ class Spreadsheet:
 				if _raster == "MONTH":
 
 					#If we got monthly spans we need to work with replace instead of timedelta.
+					#And we will always start with 
+					startDateTime = startDateTime.replace(month=1)
 					pass
 
 				elif _raster.startswith("H"):
