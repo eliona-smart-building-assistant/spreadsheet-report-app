@@ -28,7 +28,6 @@ LOG_DEFAULT_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
 #For debug purposes only
 #logging.basicConfig(filename="log.log", encoding="utf-8", format=LOG_DEFAULT_FORMAT)
-logging.basicConfig(encoding="utf-8", format=LOG_DEFAULT_FORMAT)
 
 def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
     """ Create a logger using std out and a specific format.
@@ -50,6 +49,7 @@ def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
     logger = logging.getLogger(applicationName)
 
     logger.setLevel(loglevel)
+
     consoleHandler = logging.StreamHandler()
     consoleHandler.setLevel(loglevel)
 
@@ -59,7 +59,6 @@ def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
         formatter = logging.Formatter(customLogFormat)
 
     consoleHandler.setFormatter(formatter)
-
     logger.addHandler(consoleHandler)
 
     return logger
