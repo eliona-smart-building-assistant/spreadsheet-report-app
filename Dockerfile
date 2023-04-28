@@ -15,7 +15,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Add files and directorys
-COPY ./storage ./storage
+RUN mkdir storage
 COPY ./testing ./testing
 COPY ./src .
 
