@@ -314,7 +314,32 @@ _**Example**_
 
 # Technical description
 
-# Call the Python Script
+## Container usage
+
+
+In order to use the application in an containerized environment ether the docker or the docker compose file can be used.
+The base image used is an alpine linux with python and preinstalled pandas and numpy modules.
+
+Here is the list of the available environment variables.
+
+# Connection configuration
+
+|Environment Variable|Description|
+|---|---|
+|HOST_DOMAIN|eliona url|
+|API_ENDPOINT|API endpoint. Should be: HOST_DOMAIN/api/v2 |
+|API_TOKEN|API Token for the eliona instance|
+|SSL_VERIFY|Should always be True. In cases with no certificate for testing purpose only. Can be set to False|
+|CUSTOMER_NAME|Name of the Customer|
+|TZ|Time Zone Info. For Example: "Europe/Zurich"|
+|APP_NAME|Name of the Application for the Loggs|
+|SETTINGS_PATH|Path of the Settings Should always be: "./storage/config/config.json" since the storage is mounted to an volume|
+|STORAGE_PATH|Should be always be "./storage/" |
+|LOG_LEVEL| Can be set to: "DEBUG", "ERROR", "WARNING", "INFO":|
+|TESTING_ENABLED|Enables the Testing wit a given time table|
+
+
+## Call the Python Script
 
 In Order to debug and Test the Script it can be called with these Parameters:
 
@@ -328,13 +353,13 @@ python ./src/spreadsheet-report-app/spreadsheet_report_app.py -m single -c ./sto
 
 
 
-## API calls
+### API calls
 
 To get the data we need to get the Asset ID and the aggregation ID to reduce to overhead for the retrieved aggregated data. Here is the workflow.
 
 ![ApiFlow](./doc/ApiDataFlow.png)
 
-## Temp file handling
+### Temp file handling
 
 In order to send the data the reports will be created in an temporary folder. The report will only be created once if it needed to be send to multiple users. The handling of the temporary files will be like this:
 
