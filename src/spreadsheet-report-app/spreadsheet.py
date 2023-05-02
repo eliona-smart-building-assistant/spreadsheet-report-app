@@ -52,7 +52,7 @@ class Spreadsheet:
 		#set the local variables
 		_reportCreatedSuccessfully = False
 
-		self.logger.info("--------connect--------")
+		self.logger.debug("--------connect--------")
 		self.logger.debug("Host: " + str(connectionSettings["host"]))
 
 		#Connect to the eliona instance
@@ -62,7 +62,7 @@ class Spreadsheet:
 		#Check if the connection is established
 		if eliona.connection == ConStat.CONNECTED:
 				
-			self.logger.info("--------Create Table--------")
+			self.logger.debug("--------Create Table--------")
 			#Call the report creator
 			if (reportSettings["type"] == "DataListSequential") or (reportSettings["type"] == "DataListParallel"):
 				_reportCreatedSuccessfully = self.__createDataListReport( eliona=eliona, settings=reportSettings, startDateTime=startDt, endDateTime=endDt)
