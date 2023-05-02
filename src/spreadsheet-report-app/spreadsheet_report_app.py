@@ -62,7 +62,7 @@ class Spreadsheet_report_app:
 					"lastSend": {"type": "string"}
 				}]}
 
-	loggerLevel = log.LOG_LEVEL_INFO
+	loggerLevel = log.LOG_LEVEL_DEBUG
 	logger = log.createLogger(applicationName=LOGGER_NAME, loglevel=log.LOG_LEVEL_INFO)
 
 	settings = {}
@@ -131,11 +131,7 @@ class Spreadsheet_report_app:
 		-> None
 		"""
 
-		_reportLastSend = {}
-
 		self.logger.info("--------run--------")
-
-
 
 		#Loop constantly through the settings
 		while True:
@@ -144,7 +140,7 @@ class Spreadsheet_report_app:
 			_storeNewData = False
 
 			#Read the Settings file and validate it
-			self.logger.debug("--------read the settings--------")
+			self.logger.info("--------read the settings--------")
 			self.settings, _settingsAreValid = self._readSettings(self.settingsPath, self.SETTINGS_SCHEME)
 
 			#If Settings are valid we will read them and perform the actions
@@ -200,7 +196,6 @@ class Spreadsheet_report_app:
 							_userObj.configure(elionaConfig=self.settings["eliona_handler"], userConfig=_user, reportConfig=self.settings["reportConfig"])
 
 							_now = self._now()
-							self.logger.debug(f"current Timestamp: {_now}")
 							_reportWasSend = _userObj.wasReportSend(_now)
 							
 							self.logger.debug(f"Reports  for user: {_userName} was already send : {_reportWasSend}")
@@ -513,7 +508,6 @@ if __name__ == "__main__":
 			print(str(err))
 			exit()
 
-		print( os.environ.get("API_TOKEN"))
 
 		# Create the object wit al required information
 		mainApp = Spreadsheet_report_app(	settingsPath=_argDict.get("config"), 
