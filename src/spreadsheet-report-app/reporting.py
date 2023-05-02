@@ -276,22 +276,28 @@ class BasicReport:
 		"""
 		Thread to create and send the Report
 		"""
+		_reports = []
+		_created = False
 
 		#Create the report
 		for _report in self.reports:
-			self._create(report=_report, year=year, month=month)
+			_created = self._create(report=_report, year=year, month=month)
+
+			#Add the reports to the send list if created
+			if _created:
+				_reports.append(_report)
 
 		#Send the mail
 		if not createOnly: 
-			self._send(subject, content)
+			self._send(subject=subject, content=content, reports=_reports)
 
 	def _create(self, report:dict, year:int, month:int) -> bool:
 		"""
 		Call the reporter object with the requested settings and TimeSpan
 
-		startStamp:datetime 	= Start time stamp of the report
-		stopStamp:datetime		= End time of the report
 		report:dict 			= Settings of the report as dictionary
+		year:int				= Year create the report from
+		month:int				= Month to create the report from
 
 		Return: bool -> Will return true if report was successfully created
 		"""
@@ -305,24 +311,33 @@ class BasicReport:
 		self.state = ReportState.CREATING
 		_reportName = report["name"]
 
-		#Get the start and stop time
-		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
-
-		_dayDelta = timedelta(days=1)
-		report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
-
-		self.logger.info(f"Call the reporting function with start {_startStamp} and end timestamp {_stopStamp}")
-
-		#Call the reporting function
-		_reporter = Spreadsheet(logLevel=self.loggerLevel)
-		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
+		#Only create the yearly reports in January
+		if not ((_reportSchedule == Schedule.YEARLY) and month != 1):
 
 
-		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
+			#Get the start and stop time
+			_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
+
+			_dayDelta = timedelta(days=1)
+			report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+
+			self.logger.info(f"Call the reporting function for report: '{_reportName}' with start: '{_startStamp}' and end timestamp '{_stopStamp}'")
+
+			#Call the reporting function
+			_reporter = Spreadsheet(logLevel=self.loggerLevel)
+			_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
+
+			self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
+
+		else:
+
+			self.logger.info(f"Report: {_reportName} was not created. Will only be created on January.")
+			_reportSendFeedBack = False
+
 
 		return _reportSendFeedBack
 
-	def _send(self, subject:str, content:str):
+	def _send(self, subject:str, content:str, reports:list):
 		"""
 		Send the created reports to the configured receivers
 		
@@ -339,7 +354,7 @@ class BasicReport:
 												content=content, 
 												receiver=self.recipients,
 												blindCopyReceiver=self.blindCopyRecipients,
-												reports=self.reports)
+												reports=reports)
 
 		if _mailState:
 
