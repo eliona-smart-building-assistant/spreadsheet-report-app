@@ -311,28 +311,20 @@ class BasicReport:
 		self.state = ReportState.CREATING
 		_reportName = report["name"]
 
-		#Only create the yearly reports in January
-		if not ((_reportSchedule == Schedule.YEARLY) and month != 1):
 
+		#Get the start and stop time
+		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
-			#Get the start and stop time
-			_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
+		_dayDelta = timedelta(days=1)
+		report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
 
-			_dayDelta = timedelta(days=1)
-			report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+		self.logger.info(f"Call the reporting function for report: '{_reportName}' with start: '{_startStamp}' and end timestamp '{_stopStamp}'")
 
-			self.logger.info(f"Call the reporting function for report: '{_reportName}' with start: '{_startStamp}' and end timestamp '{_stopStamp}'")
+		#Call the reporting function
+		_reporter = Spreadsheet(logLevel=self.loggerLevel)
+		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
-			#Call the reporting function
-			_reporter = Spreadsheet(logLevel=self.loggerLevel)
-			_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
-
-			self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
-
-		else:
-
-			self.logger.info(f"Report: {_reportName} was not created. Will only be created on January.")
-			_reportSendFeedBack = False
+		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
 
 
 		return _reportSendFeedBack
@@ -525,8 +517,13 @@ class User(BasicReport):
 
 		Return
 		------
-		->None				= No returns 											
+		->None				= No returns
 		"""
+
+		#Remove the yearly reports if we are not in January
+		for _report in self.reports:
+			if (_report["schedule"] == "yearly") and (month != 1):
+				self.reports.remove(_report)
 
 		#Subject of the mail changed to the user based subject
 		if subject == "":
@@ -538,9 +535,10 @@ class User(BasicReport):
 		#Create the content for the user based reports
 		if content == "":
 			_htmlContentString = f"Heliona {self.name}, <br><br> hier sind die gewünschten Reports aus der Reporting App.<br><br><ul>" 
-
-			for _report in self.reports:
+					
+			for _report in self.reports:	
 				_htmlContentString = _htmlContentString + "<li>" + _report["name"] + "</li>"
+
 			_htmlContentString = _htmlContentString + "</ul>"
 		else:
 			_htmlContentString = content
