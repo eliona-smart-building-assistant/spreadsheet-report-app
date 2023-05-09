@@ -1,0 +1,18 @@
+<diagram program="umletino" version="15.0.0"><zoom_level>10</zoom_level><element><id>UMLGeneric</id><coordinates><x>10</x><y>10</y><w>240</w><h>100</h></coordinates><panel_attributes>Konfiguration
+--
+Als Kunde möchte ich keine 
+konfigurationen vornehmen müssen 
+bg=gray</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>10</x><y>490</y><w>240</w><h>100</h></coordinates><panel_attributes>Konfiguration
+--
+Als Entwickler möchte ich kunden-
+spezifische anpassungen über eine Excel 
+Datei realisieren 
+bg=green</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>260</x><y>10</y><w>240</w><h>100</h></coordinates><panel_attributes>Deployment
+--
+Als Kunde möchte ich keine 
+updateprozesse ausführen müssen 
+bg=gray</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>260</x><y>490</y><w>240</w><h>100</h></coordinates><panel_attributes>Deployment
+--
+Als Entwickler möchte ich einfach die 
+neueste software zur verfügung stellen 
+bg=green</panel_attributes><additional_attributes></additional_attributes></element></diagram>

@@ -1,0 +1,18 @@
+version: '3'
+services:
+  spreadsheet-report-app:
+    # Here you can specify an env-file with variables
+    # that can be used in the docker-container,
+    # BUT these variables can not be used here in the
+    # docker-compose using ${...} UNLESS it is a file named
+    # ".env". This file (in the same directory) is always
+    # loaded into the docker-compose, but not into the 
+    # docker-containers unless the variables are mapped in the 
+    # environment option below or using the env_file option here.
+    env_file: .env
+    container_name: spreadsheet_report_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - './storage:/app/storage'
