@@ -149,8 +149,11 @@ class Spreadsheet:
 							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == startDateTime.strftime(_timeStampFormat) )]
 
 							#Set the Value to the Spreadsheet cell
-							if(_dataFrame.size > 0):
+							if(len(_dataFrame.index) == 1):
 								_newValue = _newValue.replace(_configRaw,  str(_dataFrame.at[0,"Value"])) #.replace(".", ",")
+							elif(len(_dataFrame.index) > 1):
+								self.logger.error("Received more than one data entry from the database: " + str(len(_dataFrame.index)))
+								_newValue = _newValue.replace(_configRaw, "DOUBLE-VALUE")
 							else:
 								_newValue = _newValue.replace(_configRaw, "NO-VALUE")
 
