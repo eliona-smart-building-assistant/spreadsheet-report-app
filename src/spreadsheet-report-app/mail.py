@@ -279,8 +279,8 @@ if __name__ == "__main__":
 							subject="Eliona APIv2 SpreadsheetApp Testmail Variante 1", 
 							content=_content, 
 							receiver=_receiverList, 
-							attachments=None,
-							blindCopyReceiver=_attachmentsList)
+							attachments=_attachmentsList,
+							blindCopyReceiver=None)
 
 	#Send the test mail
 	#_mailHandler.sendMail(	connection=_settings["eliona_handler"], 

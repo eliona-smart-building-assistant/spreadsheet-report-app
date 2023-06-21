@@ -314,8 +314,11 @@ _**Example**_
 
 # Technical description
 
-## Container usage
+## Debugging Toolchain
 
+![ToolChain](./doc/DebugToolChain.png)
+
+## Container usage
 
 In order to use the application in an containerized environment ether the docker or the docker compose file can be used.
 The base image used is an alpine linux with python and preinstalled pandas and numpy modules.
