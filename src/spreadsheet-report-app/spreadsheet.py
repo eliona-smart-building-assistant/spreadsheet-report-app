@@ -219,7 +219,6 @@ class Spreadsheet:
 					#If we got monthly spans we need to work with replace instead of timedelta.
 					#And we will always start with 
 					startDateTime = startDateTime.replace(month=1)
-					pass
 
 				elif _raster.startswith("H"):
 
@@ -241,8 +240,11 @@ class Spreadsheet:
 				_timeStampList = []
 				_timeStamp = startDateTime
 
+				# Define the end of the list. We do not want to fiddle around with the time interval. Therefore just -1 minute :-) 
+				_endTimeStampForList = (endDateTime-timedelta(minutes=1))
+
 				if _raster == "MONTH":
-					while (_timeStamp <= endDateTime):
+					while (_timeStamp <= _endTimeStampForList):
 						_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
 
 						if _timeStamp.month + 1 > 12:
@@ -252,7 +254,7 @@ class Spreadsheet:
 							_timeStamp = _timeStamp.replace(month=_timeStamp.month + 1)
 
 				else:
-					while (_timeStamp <= endDateTime):
+					while (_timeStamp <= _endTimeStampForList):
 						_timeStampList.append((_timeStamp).strftime(_timeStampFormat))
 						_timeStamp = _timeStamp + timeTick
 
