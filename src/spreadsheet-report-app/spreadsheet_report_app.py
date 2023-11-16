@@ -17,8 +17,8 @@ LOGGER_NAME = "Scheduler"
 SLEEP_TILL_NEXT_REQUEST = 3600
 
 
-DEFAULT_SETTINGS_PATH = "./tmp_reports/Cust_Config/config.json"
-
+DEFAULT_SETTINGS_PATH = "./storage/config/config.json"
+DEFAULT_OUTPUT_PATH = "./storage/templates"
 
 class Spreadsheet_report_app:
 
@@ -464,7 +464,7 @@ if __name__ == "__main__":
 
 		_envDict = {} #Create the environment dict with all params
 
-		mainApp = Spreadsheet_report_app(settingsPath=_envDict["config"])
+		mainApp = Spreadsheet_report_app(settingsPath=DEFAULT_SETTINGS_PATH, storagePath=DEFAULT_OUTPUT_PATH, testingEnable=False, loggingLevel="DEBUG")
 		mainApp.run(sys.argv)
 
 	else:
