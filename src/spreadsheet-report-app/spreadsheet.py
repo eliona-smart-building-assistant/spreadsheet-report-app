@@ -155,7 +155,19 @@ class Spreadsheet:
 								self.logger.error("Received more than one data entry from the database: " + str(len(_dataFrame.index)))
 								_newValue = _newValue.replace(_configRaw, "DOUBLE-VALUE")
 							else:
-								_newValue = _newValue.replace(_configRaw, "NO-VALUE")
+								
+								# Get the config what to enter if no value was found
+								_noValue = _config.get("fillNone", "NO-VALUE")
+
+								if _noValue == "last":
+									_filler = "NOT-Implemented"
+								elif _noValue == "zero":
+									_filler = "0"
+								else:
+									_filler = "NO-VALUE"
+
+
+								_newValue = _newValue.replace(_configRaw, _filler)
 
 				if _jsonFound:
 					if self.__isFloat(_newValue):
