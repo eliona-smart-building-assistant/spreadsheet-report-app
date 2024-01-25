@@ -18,7 +18,7 @@ SLEEP_TILL_NEXT_REQUEST = 3600
 
 
 DEFAULT_SETTINGS_PATH = "./storage/config/config.json"
-DEFAULT_OUTPUT_PATH = "./storage/templates"
+DEFAULT_OUTPUT_PATH = "./storage/debug/"
 
 class Spreadsheet_report_app:
 
