@@ -7,6 +7,7 @@ import pandas as pd
 import shutil
 import utils.logger as log
 from datetime import datetime, timedelta
+import pytz
 
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
@@ -34,7 +35,7 @@ class Spreadsheet:
 		------ 
 		startDt:datetime			= Start time of the Report
 		endDt:datetime 				= End Time of teh Report => Will include the given end time by the data point as last entry
-		connectionSettings:dict 	= COnnection settings for the eliona handler
+		connectionSettings:dict 	= Connection settings for the eliona handler {"host", "api", "projectId", "apiKey", "dbTimeZone"}
 		reportSettings:dict			= Settings for the to configured report
 
 		Return
@@ -117,8 +118,6 @@ class Spreadsheet:
 						elif ((("assetId" in _config) or ("assetGai" in _config)) and ("attribute" in _config)):
 
 							_timeStampFormat = "%Y-%m-%d %H:%M:%S"
-							_endTimeOffset = timedelta(days=1)
-
 
 							if "assetId" in _config: 
 								_assetId = int(_config["assetId"])
@@ -146,11 +145,11 @@ class Spreadsheet:
 							_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
 
 							#Just get the right timestamp
-							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == startDateTime.strftime(_timeStampFormat) )]
+							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == startDateTime.strftime(_timeStampFormat))]
 
 							#Set the Value to the Spreadsheet cell
 							if(len(_dataFrame.index) == 1):
-								_newValue = _newValue.replace(_configRaw,  str(_dataFrame.at[0,"Value"])) #.replace(".", ",")
+								_newValue = _newValue.replace(_configRaw,  str(_dataFrame.at[0,"Value"]))
 							elif(len(_dataFrame.index) > 1):
 								self.logger.error("Received more than one data entry from the database: " + str(len(_dataFrame.index)))
 								_newValue = _newValue.replace(_configRaw, "DOUBLE-VALUE")
@@ -160,9 +159,12 @@ class Spreadsheet:
 								_noValue = _config.get("fillNone", "NO-VALUE")
 
 								if _noValue == "last":
-									_filler = "NOT-Implemented"
+									_filler = self.getLastReceivedValue(eliona=eliona, assetGai=_assetGai, assetId=_assetId, attribute=str(_config["attribute"]), startDateTime=startDateTime, timeStampFormat=_timeStampFormat)
+									dateTimeStr = startDateTime.isoformat()
+									assetAttribute = str(_config["attribute"])
+									self.logger.warning(f"No value found and was replaced by last value from year raster. Asset: {_assetGai}, Attribute: {assetAttribute}, DateTime: {dateTimeStr}")
 								elif _noValue == "zero":
-									_filler = "0"
+									_filler = 0
 								else:
 									_filler = "NO-VALUE"
 
@@ -215,6 +217,7 @@ class Spreadsheet:
 				_configDict[_columnName] = _config
 
 		
+		dataColumns = []
 		#Search for the time stamp configuration
 		for _columnName in _configDict:
 
@@ -277,7 +280,7 @@ class Spreadsheet:
 					and ("attribute" in _configDict[_columnName]) 
 					and ("mode" in _configDict[_columnName])):
 				
-
+				dataColumns.append(_columnName)
 
 				if "assetId" in _configDict[_columnName]: 
 					_assetId = int(_configDict[_columnName]["assetId"])
@@ -309,6 +312,56 @@ class Spreadsheet:
 
 			else:
 				self.logger.error("No valid table configuration.")
+
+		# Search for empty cells in the data columns
+		#Get the empty data from the table
+		emptyTableFrame = pd.isnull(_dataTable)
+
+		for _columnName in dataColumns:
+
+			# Check if empty entries need to be fixed for this column
+			if _configDict[_columnName].get("fillNone", ""):
+
+				# Get the Rows with empty cells
+				singleDataFrame = emptyTableFrame[emptyTableFrame[_columnName] == True]
+
+				# Check if Data Column has entry cells
+				if singleDataFrame.size >= 1:
+
+					print("Found empty entries")
+
+					#Fix all the empty cells
+					for _itemIndex, _columnValues in singleDataFrame.iterrows():
+
+						# Get the configuration of the row from teh template
+						fillNone = _configDict[_columnName].get("fillNone", "NO-VALUE")
+
+						if "assetId" in _configDict[_columnName]: 
+							_assetId = int(_configDict[_columnName]["assetId"])
+						else:
+							_assetId = 0
+
+						if "assetGai" in _configDict[_columnName]:
+							_assetGai = _configDict[_columnName]["assetGai"]
+						else:
+							_assetGai = ""
+						_assetAttribute = str(_configDict[_columnName]["attribute"])
+
+						# Get the timestamp
+						dateTimeStr = _dataTable.at[_itemIndex, _timeStampColumnName]
+						_startTimestamp = datetime.strptime(dateTimeStr, _timeStampFormat).astimezone(pytz.timezone("Europe/Zurich"))
+
+						if fillNone == "last":
+							_newValue = self.getLastReceivedValue(eliona=eliona, assetGai=_assetGai, assetId=_assetId, attribute=_assetAttribute, startDateTime=_startTimestamp)
+							self.logger.warning(f"No value found and was replaced by last value from year raster. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr}")
+						elif fillNone == "zero":
+							_newValue = 0
+							self.logger.warning(f"No value found and was replaced by last value from year raster. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr} ")
+						else:
+							_newValue = "NO-VALUE" 
+
+						#Set the new Value to the table
+						_dataTable.at[_itemIndex, _columnName] = _newValue
 
 		#Fill up the empty cells. First with the newer ones. In case the first row is empty we will also fill with the older ones up
 		if "fillNone" in settings:
@@ -372,7 +425,8 @@ class Spreadsheet:
 		return _fileWritten
 
 	def __getAggregatedDataList(self, eliona:ElionaApiHandler, assetId:int, attribute:str, startDateTime:datetime, 
-								endDateTime:datetime, raster:str, mode:str, timeStampKey:str, valueKey:str, assetGai:str="") -> tuple[dict|None, pd.DataFrame|None, bool]:
+								endDateTime:datetime, raster:str, mode:str, timeStampKey:str, valueKey:str, assetGai:str="",
+								fillNone="") -> tuple[dict|None, pd.DataFrame|None, bool]:
 		"""
 		Get an attribute value from the given time span with tick
 		Will return an dictionary with time stamp as key
@@ -611,6 +665,79 @@ class Spreadsheet:
 			self.logger.exception("Could not create csv file from Excel File: " + self.reportFilePath)
 
 		return _fileWritten
+
+	def getLastReceivedValue(self, eliona:ElionaApiHandler, assetGai:str, assetId:int, attribute:str, startDateTime:datetime)->str:
+		"""
+		Will try to get the last received Value for the given asset and attribute.
+		=> try to get the timestamp of this year. If not available try to get the timestamp from last year.
+		If No value is available NO-Value will be returned
+
+		Params
+		------
+		eliona:ElionaApiHandler
+		assetGai:str
+		assetId:str
+		config:dict
+		configRaw:dict
+		startDateTime:datetime
+
+		"""
+
+		_value = ""
+		_loopCounter = 12
+		_startTimestamp = startDateTime
+		
+		while True:
+
+			_endTimestamp = startDateTime
+			if startDateTime.month > 1:
+				_startTimestamp = _startTimestamp.replace(month=_startTimestamp.month-1)
+			else:
+				_startTimestamp = _startTimestamp.replace(month=12)
+
+			if assetId == 0:
+				_assetId = eliona.get_asset_id(asset_gai=assetGai)
+			else:
+				_assetId = assetId
+
+			_data, _errorMsg = eliona.get_data_trends(  asset_id=_assetId,
+														from_date=_startTimestamp.isoformat(),
+														to_date=_endTimestamp.isoformat(),
+														data_subtype="input")
+
+
+			if _errorMsg == "":
+				print("No error occurred")
+				_value = "NO-VALUE"
+				if len(_data)>0:
+					if _data[-1].get("asset_id", "") == _assetId:
+						_lastData = _data[-1].get("data", {})
+						_value = _lastData.get(attribute, None)
+						break
+			else:
+				_value = "NO-VALUE"
+				_startDateStr = _startTimestamp.isoformat()
+				_endDateStr = _endTimestamp.isoformat()
+				self.logger.error(f"Tried to read the trend data from: {_startDateStr} to: {_endDateStr} with AssetGai {assetGai} Attribute: {attribute} Error Msg: {_errorMsg}")
+				break
+
+			if _loopCounter <= 0:
+				break
+			else:
+				_loopCounter = _loopCounter - 1
+
+
+		# Try to transform to an number
+		try:
+			_value = int(_value)
+		except ValueError:
+			try:
+				_value = float(_value)
+			except:
+				#No Changes done on the value
+				pass
+
+		return _value
 
 	def __findJson(self, text:str):
 		"""
