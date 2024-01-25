@@ -726,17 +726,6 @@ class Spreadsheet:
 			else:
 				_loopCounter = _loopCounter - 1
 
-
-		# Try to transform to an number
-		try:
-			_value = int(_value)
-		except ValueError:
-			try:
-				_value = float(_value)
-			except:
-				#No Changes done on the value
-				pass
-
 		return _value
 
 	def __findJson(self, text:str):
