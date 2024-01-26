@@ -168,8 +168,8 @@ class Spreadsheet:
 								else:
 									_filler = "NO-VALUE"
 
-
-								_newValue = _newValue.replace(_configRaw, _filler)
+								# Replace the json config with the filler value
+								_newValue = _newValue.replace(_configRaw, str(_filler))
 
 				if _jsonFound:
 					if self.__isFloat(_newValue):
