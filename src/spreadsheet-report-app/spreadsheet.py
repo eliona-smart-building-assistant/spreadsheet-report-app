@@ -352,14 +352,13 @@ class Spreadsheet:
 							_newValue = self.getLastReceivedValue(eliona=eliona, assetGai=_assetGai, assetId=_assetId, attribute=_assetAttribute, startDateTime=_startTimestamp)
 							_newValueStr = str(_newValue)
 							self.logger.warning(f"No value found and was replaced by last value: {_newValueStr}. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr}")
+							_dataTable.at[_itemIndex, _columnName] = _newValue
+							break
 						elif fillNone == "zero":
 							_newValue = 0
 							self.logger.warning(f"No value found and was replaced by zero. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr} ")
-						else:
-							_newValue = "NO-VALUE" 
-
-						#Set the new Value to the table
-						_dataTable.at[_itemIndex, _columnName] = _newValue
+							_dataTable.at[_itemIndex, _columnName] = _newValue
+							break
 
 		#Fill up the empty cells. First with the newer ones. In case the first row is empty we will also fill with the older ones up
 		if settings.get("fillNone", True):
