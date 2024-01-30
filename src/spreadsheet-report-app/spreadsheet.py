@@ -682,9 +682,9 @@ class Spreadsheet:
 			if startDateTime.month > 1:
 				# We will set the day to the first of the Mont. 
 				# Otherwise maybe the month will not have the day of the next month
-				_startTimestamp = _startTimestamp.replace(month=_startTimestamp.month-1, day=1)
+				_startTimestamp = _startTimestamp.replace(month=(_startTimestamp.month-1), day=1)
 			else:
-				_startTimestamp = _startTimestamp.replace(month=12, day=1)
+				_startTimestamp = _startTimestamp.replace(year=(_startTimestamp.year-1), month=12, day=1)
 
 			if assetId == 0:
 				_assetId = eliona.get_asset_id(asset_gai=assetGai)
