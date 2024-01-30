@@ -338,10 +338,14 @@ class Spreadsheet_report_app:
 			try:
 				file_path = os.path.join(path, file)
 
-				if os.path.isfile(file_path):
+				if file_path.lower().endswith(".json"):
+					# Do not delete the configuration files
+					pass
+
+				elif os.path.isfile(file_path):
 
 					#Check if file is older then one year
-					if os.path.getctime(file_path) < current_time.timestamp() - (10 * 60): #365 * 24 * 60 * 60
+					if os.path.getctime(file_path) < current_time.timestamp() - (4 * (60 * 60)): #365 * 24 * 60 * 60
 						
 						#Remove the file
 						os.remove(file_path)
