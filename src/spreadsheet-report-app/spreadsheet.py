@@ -13,7 +13,6 @@ from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
 LOGGER_NAME = "Spreadsheet"
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
-FILL_UP = True #If true will first fill up with heading and then tailing none lines
 
 class Spreadsheet:
 
@@ -363,17 +362,9 @@ class Spreadsheet:
 						_dataTable.at[_itemIndex, _columnName] = _newValue
 
 		#Fill up the empty cells. First with the newer ones. In case the first row is empty we will also fill with the older ones up
-		if "fillNone" in settings:
-			
-			if settings["fillNone"]:
-				_dataTable = _dataTable.fillna(method="ffill")
-				_dataTable = _dataTable.fillna(method="bfill")
-
-		else:
-
-			if FILL_UP:
-				_dataTable = _dataTable.fillna(method="ffill")
-				_dataTable = _dataTable.fillna(method="bfill")
+		if settings.get("fillNone", True):
+			_dataTable = _dataTable.fillna(method="ffill")
+			_dataTable = _dataTable.fillna(method="bfill")
 
 		#Write the data to file
 		_reportCreated = self.__writeDataToFile(data=_dataTable, settings=settings)
