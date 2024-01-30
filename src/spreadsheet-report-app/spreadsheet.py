@@ -328,8 +328,6 @@ class Spreadsheet:
 				# Check if Data Column has entry cells
 				if singleDataFrame.size >= 1:
 
-					print("Found empty entries")
-
 					#Fix all the empty cells
 					for _itemIndex, _columnValues in singleDataFrame.iterrows():
 
@@ -353,10 +351,11 @@ class Spreadsheet:
 
 						if fillNone == "last":
 							_newValue = self.getLastReceivedValue(eliona=eliona, assetGai=_assetGai, assetId=_assetId, attribute=_assetAttribute, startDateTime=_startTimestamp)
-							self.logger.warning(f"No value found and was replaced by last value from year raster. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr}")
+							_newValueStr = str(_newValue)
+							self.logger.warning(f"No value found and was replaced by last value: {_newValueStr}. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr}")
 						elif fillNone == "zero":
 							_newValue = 0
-							self.logger.warning(f"No value found and was replaced by last value from year raster. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr} ")
+							self.logger.warning(f"No value found and was replaced by zero. AssetGAI: {_assetGai}, Attribute: {_assetAttribute}, DateTime: {dateTimeStr} ")
 						else:
 							_newValue = "NO-VALUE" 
 
@@ -709,7 +708,6 @@ class Spreadsheet:
 
 
 			if _errorMsg == "":
-				print("No error occurred")
 				_value = "NO-VALUE"
 				if len(_data)>0:
 					if _data[-1].get("asset_id", "") == _assetId:
