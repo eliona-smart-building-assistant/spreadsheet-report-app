@@ -43,7 +43,7 @@ class Spreadsheet:
 
 		"""
 
-		self.reportFilePath = reportSettings["tempPath" ]
+		self.reportFilePath = reportSettings["tempPath"]
 		
 		# If the file already exists we skip the creation part
 		if os.path.isfile(self.reportFilePath):
