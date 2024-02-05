@@ -1,0 +1,6 @@
+git+https://gitlab.leicom.ch/lei-pub/eliona-api-handler.git@elionaClient2_v1.0.0#egg=eliona-modules
+jsonschema==4.16.0
+formulas==1.2.6
+email-validator==1.3.0
+pandas==1.5.1
+openpyxl==3.0.10
