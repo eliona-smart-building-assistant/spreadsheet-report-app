@@ -361,13 +361,13 @@ class Spreadsheet_report_app:
 
 				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
-	def _singleExport(self, reportDate:str, reportName:str="", userName:str=""):
+	def _singleExport(self, reportDate:datetime, reportName:str="", userName:str=""):
 		"""
 		Create an report for a single timestamp by user or report
 
 		Params
 		-----
-		reportDate:str			Date of the report
+		reportDate:str			Date of the report with the format: dd.mm.yyyy
 		reportName:str			[Optional] Report name
 		userName:str			[Optional] User name
 
@@ -387,7 +387,6 @@ class Spreadsheet_report_app:
 		#Set the Output path
 		_outputPath = self.storagePath +"manual_created/"
 
-
 		#Get the reports
 		if userName != None:
 
@@ -397,7 +396,7 @@ class Spreadsheet_report_app:
 				if userName == _user["name"]: 				
 
 					_userObj = User(name=userName, tempFilePath=_outputPath, logLevel=self.loggerLevel, testing=self.testing)
-					_userObj.configure(elionaConfig=_settingsJson["eliona_handler"], userConfig=_user)
+					_userObj.configure(elionaConfig=_settingsJson["eliona_handler"], userConfig=_user, reportConfig=_settingsJson["reportConfig"])
 					_userObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
 
 
@@ -409,7 +408,7 @@ class Spreadsheet_report_app:
 				if reportName == _report["name"]:
 
 					_reportObj = Report(name=reportName, tempFilePath=_outputPath, logLevel=self.loggerLevel, testing=self.testing)
-					_reportObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_report)
+					_reportObj.configure(elionaConfig=self.settings["eliona_handler"], reportConfig=_settingsJson["reportConfig"])
 					_reportObj.sendReport(year=reportDate.year, month=reportDate.month, createOnly=True, sendAsync=False)
 
 	def _dirHandling(self, path) -> bool:
@@ -480,12 +479,12 @@ if __name__ == "__main__":
 			_argDict["mode"] = _args.mode.strip()
 			
 			if _args.config:
-				_argDict["config"] = _args.config
+				_argDict["config"] = _args.config.strip()
 			else:
 				_argDict["config"] = os.environ.get("SETTINGS_PATH") 
 
 			if _args.storage:
-				_argDict["storage"] = _args.storage
+				_argDict["storage"] = _args.storage.strip()
 			else:
 				_argDict["storage"] = os.environ.get("STORAGE_PATH")
 
@@ -495,16 +494,21 @@ if __name__ == "__main__":
 				_argDict["testing"] = json.loads(os.environ.get("TESTING_ENABLED", "false").lower()) 
 
 			if _args.logging:
-				_argDict["logging"] = _args.logging		
+				_argDict["logging"] = _args.logging.strip()		
 			else:
 				_argDict["logging"] = os.environ.get("LOG_LEVEL")
 
 
 			# Get the single specific params 
 			if _argDict["mode"] == "single":
-				_argDict["date"] = datetime.strptime(_args.date, "%d.%m.%Y").date()
-				_argDict["user"] = _args.user
-				_argDict["report"] = _args.report
+				_argDict["date"] = datetime.strptime(_args.date.strip(), "%d.%m.%Y").date()
+
+				if _args.user:
+					_argDict["user"] = _args.user.strip()
+				
+				if _args.report:
+					_argDict["report"] = _args.report.strip()
+	
 				_argDict["testing"] = False
 
 		except Exception as err:
@@ -522,4 +526,4 @@ if __name__ == "__main__":
 		if _argDict["mode"] == "runtime":
 			mainApp.run(_args)
 		elif _argDict["mode"] == "single":
-			mainApp._singleExport(_args)
+			mainApp._singleExport(reportDate=_argDict.get("date", ""), reportName=_argDict.get("report", ""), userName=_argDict.get("user", ""))
