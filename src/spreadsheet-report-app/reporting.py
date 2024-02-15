@@ -394,7 +394,7 @@ class BasicReport:
 		if schedule == Schedule.YEARLY:
 
 			_startTime = datetime(year=(year -1), month=1, day=1)
-			_endTime = datetime(year=(year-1), month=12, day=31)
+			_endTime = datetime(year=(year), month=1, day=1)
 
 		elif schedule == Schedule.MONTHLY:
 

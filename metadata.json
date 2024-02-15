@@ -1,0 +1,13 @@
+{
+    "name": "spreadsheet-report",
+    "elionaMinVersion": "v11.0.0",    
+    "description": {
+        "de": "Erstellen von geplante Tabellenkalkulationsberichten und senden an Empfänger",
+        "en": "Create scheduled spreadsheet reports and send them to the recipients"
+    },
+    "displayName": {
+        "de": "Spreadsheet Report",
+        "en": "Spreadsheet report"
+    },
+    "useEnvironment": []
+}
