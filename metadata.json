@@ -9,5 +9,6 @@
         "de": "Spreadsheet Report",
         "en": "Spreadsheet report"
     },
+    "documentationUrl": "https://doc.eliona.io/collection/v/eliona-english/eliona-apps/apps/spreadsheet",
     "useEnvironment": []
 }
