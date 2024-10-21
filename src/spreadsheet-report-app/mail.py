@@ -136,7 +136,7 @@ class Mail:
 				self.logger.info("Connection not possible. Will try again.")
 
 		except EmailNotValidError as err:
-			self.logger.error("Invalid email\n" + err) #Print the error
+			self.logger.error("Invalid email\n" + str(err)) #Print the error
 			self.logger.error(traceback.format_exc())
 
 		except Exception as err:
