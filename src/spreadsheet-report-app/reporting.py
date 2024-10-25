@@ -324,7 +324,7 @@ class BasicReport:
 		_reporter = Spreadsheet(logLevel=self.loggerLevel)
 		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
-		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
+		self.logger.info(f"Report: {_reportName} was successfully created: {_reportSendFeedBack}")
 
 
 		return _reportSendFeedBack
