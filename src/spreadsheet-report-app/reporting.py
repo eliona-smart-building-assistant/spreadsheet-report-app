@@ -305,9 +305,12 @@ class BasicReport:
 		#get the start and stop date
 		if report["schedule"] == "yearly":
 			_reportSchedule = Schedule.YEARLY
-		else:
+		elif report["schedule"] == "monthly":
 			_reportSchedule = Schedule.MONTHLY
-
+		else:
+			_reportName = report.get("name", "")
+			raise Exception(f"No valid schedule selected for report: {_reportName}")
+	
 		self.state = ReportState.CREATING
 		_reportName = report["name"]
 
