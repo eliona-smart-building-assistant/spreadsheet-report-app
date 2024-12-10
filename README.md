@@ -300,7 +300,7 @@ The data is configured with the needed _assetId_, the required _attribute_ the _
 |raster|Set the raster of the pipeline. <br> - M15 (15 Minutes) <br> - H1 (Hour) <br> - MONTH (One Month) <br> - YEAR (full year)|
 |mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
 |fillNone|How to fill none available Data. Default is "NO-VALUE" Possible values: <br> - "NO-VALUE" (Will write "NO-VALUE" to the cell) <br> - "zero" (Will fill with 0) <br> - "last" will try to get the last written value of the attribute|
-
+|offset|Will set the offset in days. Possible values. For example -1m for the previous month. Possible spans are month, day or year|
 _**Example**_
 ```json
 {
