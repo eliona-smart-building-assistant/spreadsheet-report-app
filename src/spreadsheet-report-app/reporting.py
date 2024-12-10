@@ -230,7 +230,7 @@ class BasicReport:
 		subject:str			= Subject of the mail
 		content				= Content of the mail
 		year:int			= Year of the requested report
-		month:int			= Month of the requested report. If 0 => Yearly report will be created
+		month:int			= Month of the requested report. If 1 => Yearly report will be created
 		sendAsync:bool		= Set to True if you want to send it asynchronous
 									to False if you want to send it now and wait for it to be send
 
@@ -412,11 +412,11 @@ class BasicReport:
 
 		elif schedule == Schedule.WEEKLY:
 
-			pass
+			self.logger.error("Not implemented time span for: {schedule}")
 
 		elif schedule == Schedule.DAILY:
 
-			pass
+			self.logger.error("Not implemented time span for: {schedule}")
 
 		else:
 			self.logger.error("Could define time span for schedule: {schedule}")
@@ -514,7 +514,7 @@ class User(BasicReport):
 		subject:str			= Subject of the mail
 		content				= Content of the mail
 		year:int			= Year of the requested report
-		month:int			= Month of the requested report. If 0 => Yearly report will be created
+		month:int			= Month of the requested report. If 1 => Yearly report will be created
 		sendAsync:bool		= Set to True if you want to send it asynchronous
 									to False if you want to send it now and wait for it to be send
 

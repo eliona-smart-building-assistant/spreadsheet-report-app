@@ -8,6 +8,7 @@ import shutil
 import utils.logger as log
 from datetime import datetime, timedelta
 import pytz
+from dateutil.relativedelta import relativedelta
 
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
@@ -101,6 +102,7 @@ class Spreadsheet:
 				#{"assetId":"xxx", "attribute":"yyy"}
 				if type(_value) == str:
 
+					_config:dict
 					for _config, _configRaw in self.__findJson(_value):
 						_jsonFound = True
 
@@ -117,16 +119,12 @@ class Spreadsheet:
 						elif ((("assetId" in _config) or ("assetGai" in _config)) and ("attribute" in _config)):
 
 							_timeStampFormat = "%Y-%m-%d %H:%M:%S"
+							offsetConfig=_config.get("offset", "0")
+							self.logger.debug(f"OffsetConfig={offsetConfig}")
+							_offset = self.__getOffsetTimeDelta(offsetConfig)
+							_assetId = int(_config.get("assetId", "0"))
+							_assetGai = _config.get("assetGai", "")
 
-							if "assetId" in _config: 
-								_assetId = int(_config["assetId"])
-							else:
-								_assetId = 0
-
-							if "assetGai" in _config:
-								_assetGai = _config["assetGai"]
-							else:
-								_assetGai = ""
 
 							_data, _dataFrame, _correctTimestamps = self.__getAggregatedDataList(	eliona=eliona, 
 																									assetGai=_assetGai,
@@ -144,7 +142,7 @@ class Spreadsheet:
 							_dataFrame["TimeStamp"] = pd.to_datetime(arg=_dataFrame["TimeStamp"]).dt.strftime(_timeStampFormat)						
 
 							#Just get the right timestamp
-							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == startDateTime.strftime(_timeStampFormat))]
+							_dataFrame = _dataFrame[(_dataFrame["TimeStamp"] == (startDateTime + _offset).strftime(_timeStampFormat))]
 
 							#Set the Value to the Spreadsheet cell
 							if(len(_dataFrame.index) == 1):
@@ -717,6 +715,38 @@ class Spreadsheet:
 				_loopCounter = _loopCounter - 1
 
 		return _value
+
+	def __getOffsetTimeDelta(self, offsetConfig:str)->timedelta:
+		"""
+		Will return the timedelta by the given offset configuration.
+		Possible offset configurations:
+		y = year
+		m = Month
+		d = day
+
+		Params
+		------
+		offsetConfig:str		Configuration as a string
+
+		Return
+		------
+		timedelta value
+		"""
+
+		retVal = relativedelta(days=0)
+
+		if offsetConfig.endswith("d"):
+			days = int(offsetConfig.replace("d", ""))
+			retVal = relativedelta(days=days)
+		
+		elif offsetConfig.endswith("m"):
+			months = int(offsetConfig.replace("m", ""))
+			retVal = relativedelta(months=months)
+
+		elif offsetConfig.endswith("y"):
+			years = int(offsetConfig.replace("y", ""))
+			retVal = relativedelta(years=years)
+		return retVal
 
 	def __findJson(self, text:str):
 		"""
