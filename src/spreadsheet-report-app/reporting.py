@@ -221,7 +221,7 @@ class BasicReport:
 
 		return _configState
 
-	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="", validateReceiver:bool=True) -> None:
 		"""
 		Create and send the report.
 
@@ -264,7 +264,7 @@ class BasicReport:
 
 
 		self.state = ReportState.CREATING
-		_thread = Thread(target=self._process, args=(year, month, _subject, _content, createOnly))
+		_thread = Thread(target=self._process, args=(year, month, _subject, _content, createOnly, validateReceiver))
 		_thread.start()
 
 		if not sendAsync:
@@ -272,7 +272,7 @@ class BasicReport:
 			#if not send async wait till done
 			_thread.join()
 
-	def _process(self, year:int, month:int, subject:str, content:str, createOnly:bool):
+	def _process(self, year:int, month:int, subject:str, content:str, createOnly:bool, validateReceiver:bool=True):
 		"""
 		Thread to create and send the Report
 		"""
@@ -289,7 +289,7 @@ class BasicReport:
 
 		#Send the mail
 		if not createOnly: 
-			self._send(subject=subject, content=content, reports=_reports)
+			self._send(subject=subject, content=content, reports=_reports, validateReceiver=validateReceiver)
 
 	def _create(self, report:dict, year:int, month:int) -> bool:
 		"""
@@ -332,7 +332,7 @@ class BasicReport:
 
 		return _reportSendFeedBack
 
-	def _send(self, subject:str, content:str, reports:list):
+	def _send(self, subject:str, content:str, reports:list, validateReceiver:bool=True):
 		"""
 		Send the created reports to the configured receivers
 		
@@ -349,7 +349,8 @@ class BasicReport:
 												content=content, 
 												receiver=self.recipients,
 												blindCopyReceiver=self.blindCopyRecipients,
-												reports=reports)
+												reports=reports,
+												validateReceiver=validateReceiver)
 
 		if _mailState:
 
@@ -474,7 +475,8 @@ class User(BasicReport):
 	Object to handle all reports for one user
 	"""
 
-	
+	validateReceiver:bool
+
 	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
 		Initialise the object
@@ -502,6 +504,9 @@ class User(BasicReport):
 		self.blindCopyRecipients = None
 		self.recipients = []
 		self.recipients.append(userConfig["msgEndpoint"])
+		
+		#Get the validate email state 
+		self.validateReceiver = userConfig.get("validateMsgPoint", True)
 
 		return super().configure(elionaConfig=elionaConfig)
 
@@ -547,7 +552,7 @@ class User(BasicReport):
 			_htmlContentString = content
 
 		#Pass to the parent class
-		super().sendReport(year, month, createOnly, sendAsync, _subjectString, _htmlContentString)
+		super().sendReport(year, month, createOnly, sendAsync, _subjectString, _htmlContentString, self.validateReceiver)
 
 class Report(BasicReport):
 	"""

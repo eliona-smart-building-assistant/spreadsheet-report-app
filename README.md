@@ -93,6 +93,7 @@ You can ether create an user based or report based schedule. If you like you can
 |name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
 |msgType|Selected message type. Currently only eMail is available|email|
 |msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
+|validateMsgPoint|Disables the email validation if the container has no valid dns configuration|false|
 |fillNone|[optional] Fill the non existing data with previous ore following data. If True the previous value will be used. If not available the first available tailing value will be used. Default value is True|False|
 
 
@@ -155,6 +156,7 @@ You can ether create an user based or report based schedule. If you like you can
         "name": "FirstName001 LastName001",
         "msgType": "email",
         "msgEndpoint": "firstName001.LastName001@company.ch",
+        "validateMsgPoint": true,
         "reports": ["Report 003"]
     },
     {
