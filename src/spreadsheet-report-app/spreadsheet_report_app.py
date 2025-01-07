@@ -263,7 +263,8 @@ class Spreadsheet_report_app:
 			if settingsJson["eliona_handler"]["sslVerify"] == "":
 				_settingIsValid = False
 				self.logger.error("No sslVerify found in Settings of environment variables")
-
+		else:
+			self.logger.error(f"File: {settingsPath} not found")
 
 		return settingsJson, _settingIsValid
 	
