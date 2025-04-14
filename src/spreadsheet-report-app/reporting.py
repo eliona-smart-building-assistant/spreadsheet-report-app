@@ -510,7 +510,7 @@ class User(BasicReport):
 
 		return super().configure(elionaConfig=elionaConfig)
 
-	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="", contentFooter:str="") -> None:
 		"""
 		Create and send the report.
 
@@ -533,6 +533,10 @@ class User(BasicReport):
 			if (_report["schedule"] == "yearly") and (month != 1):
 				self.reports.remove(_report)
 
+		if len(self.reports)== 0:
+			self.logger.debug(f"No reports available for user: {self.name}")
+			return
+
 		#Subject of the mail changed to the user based subject
 		if subject == "":
 			_monthName = datetime(year=year, month=month, day=1).strftime("%B")
@@ -548,6 +552,7 @@ class User(BasicReport):
 				_htmlContentString = _htmlContentString + "<li>" + _report["name"] + "</li>"
 
 			_htmlContentString = _htmlContentString + "</ul>"
+			_htmlContentString = _htmlContentString + F"<br><br>{contentFooter}"
 		else:
 			_htmlContentString = content
 
