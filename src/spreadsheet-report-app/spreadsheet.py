@@ -9,6 +9,7 @@ import utils.logger as log
 from datetime import datetime, timedelta
 import pytz
 from dateutil.relativedelta import relativedelta
+import traceback
 
 from eliona_modules.api.core.eliona_core import ElionaApiHandler, ConStat
 
@@ -407,7 +408,7 @@ class Spreadsheet:
 			
 
 		except:
-			self.logger.exception("Could not write Data to File: " + self.reportFilePath)
+			self.logger.error("Could not write Data to File: " + self.reportFilePath + "\n" + str(traceback.format_exc()))
 
 		return _fileWritten
 
@@ -547,7 +548,7 @@ class Spreadsheet:
 				_validKeys = False
 
 		except Exception as err:
-			self.logger.exception("Exception getting aggregated data\n" + str(err))
+			self.logger.error("Exception getting aggregated data\n" + str(err) + "\n" + str(traceback.format_exc()))
 		
 		#Return the values
 		return (_dataSet, _dataFrame, _validKeys)
@@ -589,7 +590,7 @@ class Spreadsheet:
 					#_template = pd.read_excel(io=settings["templateFile"], sheet_name=settings["sheet"])
 
 		except OSError:
-			self.logger.exception("Template file could not be opened: " + settings["templateFile"])
+			self.logger.error("Template file could not be opened: " + settings["templateFile"] + "\n" + str(traceback.format_exc()))
 
 
 		#Return the _template
@@ -649,7 +650,7 @@ class Spreadsheet:
 
 
 		except:
-			self.logger.exception("Could not create csv file from Excel File: " + self.reportFilePath)
+			self.logger.error("Could not create csv file from Excel File: " + self.reportFilePath + "\n" + str(traceback.format_exc()))
 
 		return _fileWritten
 
