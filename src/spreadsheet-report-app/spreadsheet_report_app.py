@@ -378,7 +378,7 @@ class Spreadsheet_report_app:
 
 			except Exception as err:
 
-				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
+				self.logger.error(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
 	def _singleExport(self, reportDate:datetime, reportName:str="", userName:str=""):
 		"""
