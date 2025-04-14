@@ -529,7 +529,7 @@ class User(BasicReport):
 		"""
 
 		#Remove the yearly reports if we are not in January
-		for _report in self.reports:
+		for _report in reversed(self.reports):
 			if (_report["schedule"] == "yearly") and (month != 1):
 				self.reports.remove(_report)
 
