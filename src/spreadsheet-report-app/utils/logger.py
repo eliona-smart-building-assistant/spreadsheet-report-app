@@ -26,7 +26,7 @@ LOG_LEVEL_WARNING = logging.WARNING
 LOG_LEVEL_ERROR   = logging.ERROR
 
 
-LOG_DEFAULT_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_DEFAULT_FORMAT = '%(asctime)s ; %(levelname)s ; %(name)s ; %(message)s'
 
 def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL, logFile = "./storage/logs/app.log"):
     """ Create a logger using std out and a specific format.
