@@ -1,0 +1,49 @@
+
+stages: 
+  - build-and-push
+  - deploy-and-run
+
+variables:
+
+  CONTAINER_REGISTRY: "leicom.azurecr.io"
+  CONTAINER_REGISTRY_PATH: "/apps/"
+
+  CONTAINER_NAME: "spreadsheet-report-app"
+
+  IMAGE_NAME: "datenwuerfel_vpn_reverse_proxy"
+  PACKAGE_VERSION: "${CI_COMMIT_TAG}"
+  BASE_IMAGE: "docker:24.0.7"
+
+  # When using dind service, you must instruct docker to talk with the
+  # daemon started inside of the service. The daemon is available with
+  # a network connection instead of the default /var/run/docker.sock socket.
+  #
+  # The 'docker' hostname is the alias of the service container as described at
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
+  DOCKER_HOST: tcp://docker:2375
+
+  # This instructs Docker not to start over TLS.
+  DOCKER_TLS_CERTDIR: ""
+
+
+
+image-to-registry:
+  stage: build-and-push
+  image: $BASE_IMAGE
+  services: 
+    - $BASE_IMAGE-dind
+  tags:
+    - docker, elevated
+  rules:
+    - if: $CI_COMMIT_TAG
+
+  script:
+
+    # Build the image
+    - docker build -t "$CONTAINER_REGISTRY$CONTAINER_REGISTRY_PATH$IMAGE_NAME:$PACKAGE_VERSION" .
+
+    # Log in to the registry
+    - docker login $CONTAINER_REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+
+    # Push the image to the registry
+    - docker push $CONTAINER_REGISTRY$CONTAINER_REGISTRY_PATH$IMAGE_NAME:$PACKAGE_VERSION

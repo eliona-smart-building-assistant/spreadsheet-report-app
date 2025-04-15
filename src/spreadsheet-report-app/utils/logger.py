@@ -14,7 +14,9 @@
     date:   Winterthur, 07.12.2020
     file:   logger.py
 """
+import os
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 LOG_LEVEL         = logging.INFO
 
@@ -24,9 +26,9 @@ LOG_LEVEL_WARNING = logging.WARNING
 LOG_LEVEL_ERROR   = logging.ERROR
 
 
-LOG_DEFAULT_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_DEFAULT_FORMAT = '%(asctime)s ; %(levelname)s ; %(name)s ; %(message)s'
 
-def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
+def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL, logFile = "./storage/logs/app.log"):
     """ Create a logger using std out and a specific format.
 
         the returned logger from module logging can used like:
@@ -47,15 +49,25 @@ def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL):
 
     logger.setLevel(loglevel)
 
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(loglevel)
-
     if customLogFormat == None:
         formatter = logging.Formatter(LOG_DEFAULT_FORMAT)
     else:
         formatter = logging.Formatter(customLogFormat)
 
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(loglevel)
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
 
+
+
+    if not os.path.exists(os.path.dirname(logFile)):
+        os.makedirs(os.path.dirname(logFile))
+    formatter = logging.Formatter('%(asctime)s;%(levelname)s;%(name)s;\"%(message)s\"')
+    # Konfiguriere Handler, der die Logdatei rotiert und neue erstellt, wenn sie älter als 1 Tag ist
+    fileHandler = TimedRotatingFileHandler(logFile, when='midnight', interval=1, backupCount=15)
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
+    
     return logger

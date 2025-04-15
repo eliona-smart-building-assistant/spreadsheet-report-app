@@ -37,7 +37,7 @@ class Mail:
 		"""
 		self.logger.setLevel(logLevel)
 
-	def sendMail(self, connection:dict, subject:str, content:str, receiver:list, blindCopyReceiver:list=None, attachments:list=None, reports:list=None) -> bool:
+	def sendMail(self, connection:dict, subject:str, content:str, receiver:list, blindCopyReceiver:list=None, attachments:list=None, reports:list=None, validateReceiver:bool=True) -> bool:
 		"""
 		Sending mail with the api V" to connect the 
 
@@ -78,8 +78,9 @@ class Mail:
 				_attachments = self._readAttachments(attachments=_attachmentsList)
 
 			#Check the receivers
-			for _receiver in receiver:
-				validate_email(_receiver)
+			if validateReceiver:
+				for _receiver in receiver:
+					validate_email(_receiver)
 
 
 			self.logger.debug("--------connect--------")

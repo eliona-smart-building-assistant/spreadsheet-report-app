@@ -14,6 +14,7 @@ from typing import Tuple
 import unicodedata
 import re
 import utils.logger as log
+import zipfile
 
 
 LOGGER_LEVEL = log.LOG_LEVEL_DEBUG
@@ -102,6 +103,9 @@ class BasicReport:
 
 	testing = True
 	currentTestTime:datetime
+
+	reportMonth:int
+	reportYear:int
 
 	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
@@ -221,7 +225,7 @@ class BasicReport:
 
 		return _configState
 
-	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="", validateReceiver:bool=True) -> None:
 		"""
 		Create and send the report.
 
@@ -230,7 +234,7 @@ class BasicReport:
 		subject:str			= Subject of the mail
 		content				= Content of the mail
 		year:int			= Year of the requested report
-		month:int			= Month of the requested report. If 0 => Yearly report will be created
+		month:int			= Month of the requested report. If 1 => Yearly report will be created
 		sendAsync:bool		= Set to True if you want to send it asynchronous
 									to False if you want to send it now and wait for it to be send
 
@@ -239,32 +243,11 @@ class BasicReport:
 		->None				= No returns 											
 		"""
 
-		#Define the report name's wit start and end time
-		_reportName = ""
-		for _report in self.reports:
-
-			#Define the report name
-			if _reportName == "":
-				_reportName = _report["name"]
-			else:
-				_reportName = _reportName + " " + _report["name"]
-
-		#Define the subject
-		if subject == "":
-			_subject = f"Report ({_reportName}) vom {month}.{year}"
-		else:
-			_subject = subject
-
-		#Define the content
-		if content == "":
-			_content = f"Hallo liebe user, <br><br>im Anhang befindet sich der Report ({_reportName}) für den Zeitraum vom {month}.{year}.<br>"
-			_content = _content + "Alle weiteren Informationen sind in den Reports enthalten."
-		else:
-			_content = content
-
+		self.reportMonth = month
+		self.reportYear = year
 
 		self.state = ReportState.CREATING
-		_thread = Thread(target=self._process, args=(year, month, _subject, _content, createOnly))
+		_thread = Thread(target=self._process, args=(year, month, subject, content, createOnly, validateReceiver))
 		_thread.start()
 
 		if not sendAsync:
@@ -272,7 +255,7 @@ class BasicReport:
 			#if not send async wait till done
 			_thread.join()
 
-	def _process(self, year:int, month:int, subject:str, content:str, createOnly:bool):
+	def _process(self, year:int, month:int, subject:str, content:str, createOnly:bool, validateReceiver:bool=True):
 		"""
 		Thread to create and send the Report
 		"""
@@ -289,7 +272,7 @@ class BasicReport:
 
 		#Send the mail
 		if not createOnly: 
-			self._send(subject=subject, content=content, reports=_reports)
+			self._send(subject=subject, content=content, reports=_reports, validateReceiver=validateReceiver)
 
 	def _create(self, report:dict, year:int, month:int) -> bool:
 		"""
@@ -305,9 +288,12 @@ class BasicReport:
 		#get the start and stop date
 		if report["schedule"] == "yearly":
 			_reportSchedule = Schedule.YEARLY
-		else:
+		elif report["schedule"] == "monthly":
 			_reportSchedule = Schedule.MONTHLY
-
+		else:
+			_reportName = report.get("name", "")
+			raise Exception(f"No valid schedule selected for report: {_reportName}")
+	
 		self.state = ReportState.CREATING
 		_reportName = report["name"]
 
@@ -324,12 +310,12 @@ class BasicReport:
 		_reporter = Spreadsheet(logLevel=self.loggerLevel)
 		_reportSendFeedBack = _reporter.createReport(startDt=_startStamp, endDt=_stopStamp, connectionSettings=self.elionaConfig, reportSettings=report)
 
-		self.logger.info(f"Report: {_reportName} was send successfully created: {_reportSendFeedBack}")
+		self.logger.info(f"Report: {_reportName} was successfully created: {_reportSendFeedBack}")
 
 
 		return _reportSendFeedBack
 
-	def _send(self, subject:str, content:str, reports:list):
+	def _send(self, subject:str, content:str, reports:list, validateReceiver:bool=True):
 		"""
 		Send the created reports to the configured receivers
 		
@@ -341,14 +327,59 @@ class BasicReport:
 		"""
 
 		self.state = ReportState.SENDING
-		_mailState = self.mailHandler.sendMail(	connection=self.elionaConfig, 
-												subject=subject, 
-												content=content, 
-												receiver=self.recipients,
-												blindCopyReceiver=self.blindCopyRecipients,
-												reports=reports)
 
-		if _mailState:
+		maxSize = int(self.elionaConfig.get("maxAttachmentSizeMB", "0")) * (2 ** 20)
+		maxSize = 100000
+
+		splittedFileList = self._splitFileList(fileList=reports, maxSizeBytes=maxSize)
+
+		mailState = True
+
+		if subject == "":
+			_monthName = datetime(year=self.reportYear, month=self.reportMonth, day=1).strftime("%B")
+			_subjectString = f"eliona Benutzerreport vom {_monthName} {self.reportYear}"
+		else:
+			_subjectString = subject
+
+		for _idx, _reports in enumerate(splittedFileList):
+
+
+			if len(splittedFileList) > 1:
+				_subject = _subjectString + f" Teil: {_idx + 1}" 
+			else:
+				_subject = _subjectString
+
+			#Create the content for the user based reports
+			if content == "":
+				_content = f"Heliona {self.name}, <br><br> hier sind die gewünschten Reports aus der Reporting App.<br><br><ul>" 
+						
+				for _report in _reports:	
+					_content = _content + "<li>" + _report["name"] + "</li>"
+
+				_footer = self.elionaConfig.get("instanceMailInfo", "")
+				_content = _content + "</ul>"
+				_content = _content + f"<br><br>{_footer}"
+			else:
+				_content = content
+
+
+			self.logger.debug("-----------------------------------------------------")
+			self.logger.debug(f"Send the following reports: {str(_reports)}")
+
+
+			_mailState = self.mailHandler.sendMail(	connection=self.elionaConfig, 
+													subject=_subject, 
+													content=_content, 
+													receiver=self.recipients,
+													blindCopyReceiver=self.blindCopyRecipients,
+													reports=_reports,
+													validateReceiver=validateReceiver)
+
+			if not _mailState:
+				self.logger.error("Sending mail failed")
+				mailState = False
+
+		if mailState:
 
 			#Store the current time stamp that we have send the Data			
 
@@ -370,6 +401,58 @@ class BasicReport:
 				jsonFile.truncate() # remove the "old" overlapping data
 		else:
 			self.state = ReportState.CANCELED
+
+	def _splitFileList(self, fileList:list, maxSizeBytes:int)->list:
+		"""
+		Splits a list of file paths into sublists, ensuring each sublist's total size
+		does not exceed a specified maximum size. Handles individual oversized files
+		by attempting to zip them.
+
+		Args:
+			file_list (list): A list of dictionaries, where each dictionary contains
+								a "tempPath" key with the file path.
+			max_size_bytes (int): The maximum allowed size for each sublist.
+
+		Returns:
+			list: A list of sublists, where each sublist contains dictionaries
+					representing files and the total size of each sublist is less than
+					or equal to max_size_bytes.
+		"""
+		splitLists = []
+		currentSublist = []
+		currentSize = 0
+
+		for fileInfo in fileList:
+			filePath = fileInfo["tempPath"]
+			fileSize = os.path.getsize(filePath)
+
+			if fileSize > maxSizeBytes:
+				# Zip the file if it's larger than the max size
+				zipPath = filePath + ".zip"
+				try:
+					with zipfile.ZipFile(zipPath, "w", zipfile.ZIP_DEFLATED) as zipf:
+						zipf.write(filePath)
+					fileSize = os.path.getsize(zipPath)
+					fileInfo["tempPath"] = zipPath  # Update file path to the zip file
+				except Exception as e:
+					self.logger.error(f"Error zipping file {filePath}: {e}")
+					continue  # Skip to the next file
+
+			if currentSize + fileSize <= maxSizeBytes:
+				currentSublist.append(fileInfo)
+				currentSize += fileSize
+			elif fileSize > maxSizeBytes:
+				self.logger.error(f"File {filePath} is too large to be send via mail.")
+			else:
+				splitLists.append(currentSublist)
+				currentSublist = [fileInfo]
+				currentSize = fileSize
+
+		# Add the last sublist if it's not empty
+		if currentSublist:
+			splitLists.append(currentSublist)
+
+		return splitLists
 
 	def _getReportTimeSpan(self, schedule:Schedule, timeZone:str, year:int, month:int=1) -> Tuple[datetime, datetime]:
 		"""
@@ -409,11 +492,11 @@ class BasicReport:
 
 		elif schedule == Schedule.WEEKLY:
 
-			pass
+			self.logger.error("Not implemented time span for: {schedule}")
 
 		elif schedule == Schedule.DAILY:
 
-			pass
+			self.logger.error("Not implemented time span for: {schedule}")
 
 		else:
 			self.logger.error("Could define time span for schedule: {schedule}")
@@ -471,7 +554,8 @@ class User(BasicReport):
 	Object to handle all reports for one user
 	"""
 
-	
+	validateReceiver:bool
+
 	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
 		"""
 		Initialise the object
@@ -499,6 +583,9 @@ class User(BasicReport):
 		self.blindCopyRecipients = None
 		self.recipients = []
 		self.recipients.append(userConfig["msgEndpoint"])
+		
+		#Get the validate email state 
+		self.validateReceiver = userConfig.get("validateMsgPoint", True)
 
 		return super().configure(elionaConfig=elionaConfig)
 
@@ -511,7 +598,7 @@ class User(BasicReport):
 		subject:str			= Subject of the mail
 		content				= Content of the mail
 		year:int			= Year of the requested report
-		month:int			= Month of the requested report. If 0 => Yearly report will be created
+		month:int			= Month of the requested report. If 1 => Yearly report will be created
 		sendAsync:bool		= Set to True if you want to send it asynchronous
 									to False if you want to send it now and wait for it to be send
 
@@ -521,30 +608,16 @@ class User(BasicReport):
 		"""
 
 		#Remove the yearly reports if we are not in January
-		for _report in self.reports:
+		for _report in reversed(self.reports):
 			if (_report["schedule"] == "yearly") and (month != 1):
 				self.reports.remove(_report)
 
-		#Subject of the mail changed to the user based subject
-		if subject == "":
-			_monthName = datetime(year=year, month=month, day=1).strftime("%B")
-			_subjectString = f"eliona Benutzerreport vom {_monthName} {year}"
-		else:
-			_subjectString = subject
-
-		#Create the content for the user based reports
-		if content == "":
-			_htmlContentString = f"Heliona {self.name}, <br><br> hier sind die gewünschten Reports aus der Reporting App.<br><br><ul>" 
-					
-			for _report in self.reports:	
-				_htmlContentString = _htmlContentString + "<li>" + _report["name"] + "</li>"
-
-			_htmlContentString = _htmlContentString + "</ul>"
-		else:
-			_htmlContentString = content
+		if len(self.reports)== 0:
+			self.logger.debug(f"No reports available for user: {self.name}")
+			return
 
 		#Pass to the parent class
-		super().sendReport(year, month, createOnly, sendAsync, _subjectString, _htmlContentString)
+		super().sendReport(year, month, createOnly, sendAsync, subject, content, self.validateReceiver)
 
 class Report(BasicReport):
 	"""

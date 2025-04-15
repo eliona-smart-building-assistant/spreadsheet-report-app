@@ -61,7 +61,9 @@ With the configuration you can define every requested settings in order to set u
     "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
     "projectId": 1,
     "apiKey": "YOUR_ELIONA_API_KEY",
-    "dbTimeZone": 2
+    "dbTimeZone": "Europe/Zurich",
+    "instanceMailInfo": "Syngenta eliona onCloud",
+    "maxAttachmentSizeMB":"1"
 }
 ```
 
@@ -71,7 +73,10 @@ With the configuration you can define every requested settings in order to set u
 |api|Address of the used api endpoint in this case every time with the https at front |https://develop.eliona.cloud/api/v2|
 |projectId|Project number at the used eliona instance. (You can get the number by editing the project and get tne number from the address bar)|1 ![ProjectNumber](./doc/ProjectNumber.png)|
 |apiKey|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|
-|dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC offset as integer.|
+|dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC by the required Timezone|
+|instanceMailInfo|Additional mail Footer. Should be used to identify the used eliona instance for the created report.|
+|maxAttachmentSizeMB|Maximum attachment size for the configured Kafka / Mailing service. After Reaching the limit the app will try to split / or zip the Attachments.|
+
 
 ### Report Scheduler
 
@@ -93,6 +98,7 @@ You can ether create an user based or report based schedule. If you like you can
 |name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
 |msgType|Selected message type. Currently only eMail is available|email|
 |msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
+|validateMsgPoint|Disables the email validation if the container has no valid dns configuration|false|
 |fillNone|[optional] Fill the non existing data with previous ore following data. If True the previous value will be used. If not available the first available tailing value will be used. Default value is True|False|
 
 
@@ -155,6 +161,7 @@ You can ether create an user based or report based schedule. If you like you can
         "name": "FirstName001 LastName001",
         "msgType": "email",
         "msgEndpoint": "firstName001.LastName001@company.ch",
+        "validateMsgPoint": true,
         "reports": ["Report 003"]
     },
     {
@@ -300,7 +307,7 @@ The data is configured with the needed _assetId_, the required _attribute_ the _
 |raster|Set the raster of the pipeline. <br> - M15 (15 Minutes) <br> - H1 (Hour) <br> - MONTH (One Month) <br> - YEAR (full year)|
 |mode|Reads the aggregated data with the given mode <br> - sum <br> - first <br> - last <br> - average <br> - max <br> - min |
 |fillNone|How to fill none available Data. Default is "NO-VALUE" Possible values: <br> - "NO-VALUE" (Will write "NO-VALUE" to the cell) <br> - "zero" (Will fill with 0) <br> - "last" will try to get the last written value of the attribute|
-
+|offset|Will set the offset in days. Possible values. For example -1m for the previous month. Possible spans are month, day or year|
 _**Example**_
 ```json
 {

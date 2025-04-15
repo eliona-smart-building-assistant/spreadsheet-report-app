@@ -117,7 +117,6 @@ class Spreadsheet_report_app:
 					if line.strip() != "":
 						self.timeTable.append(datetime.strptime(line.replace("\n", ""), dateTimeStrFormat))
 
-
 	def run(self, args) -> None:
 		"""
 		Main method
@@ -247,6 +246,26 @@ class Spreadsheet_report_app:
 			else:
 				self.logger.error(f"File: {settingsPath} read data's are invalid")
 
+
+			# Check if the data is not empty
+			if settingsJson["eliona_handler"]["apiKey"] == "":
+				_settingIsValid = False
+				self.logger.error("No API-Key found in Settings of environment variables")
+			if settingsJson["eliona_handler"]["dbTimeZone"] == "":
+				_settingIsValid = False
+				self.logger.error("No TimeZone found in Settings of environment variables")
+			if settingsJson["eliona_handler"]["host"] == "":
+				_settingIsValid = False
+				self.logger.error("No Host URL found in Settings of environment variables")
+			if settingsJson["eliona_handler"]["api"] == "":
+				_settingIsValid = False
+				self.logger.error("No api-URL found in Settings of environment variables")
+			if settingsJson["eliona_handler"]["sslVerify"] == "":
+				_settingIsValid = False
+				self.logger.error("No sslVerify found in Settings of environment variables")
+		else:
+			self.logger.error(f"File: {settingsPath} not found")
+
 		return settingsJson, _settingIsValid
 	
 	def _validateJson(self, jsonData:dict, jsonScheme:dict) -> bool:
@@ -359,7 +378,7 @@ class Spreadsheet_report_app:
 
 			except Exception as err:
 
-				self.logger.exception(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
+				self.logger.error(f"Failed to delete file: {file_path}" + str(err) + "\n" + traceback.format_exc())
 
 	def _singleExport(self, reportDate:datetime, reportName:str="", userName:str=""):
 		"""
