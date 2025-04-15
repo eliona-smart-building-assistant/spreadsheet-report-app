@@ -70,8 +70,4 @@ def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL, 
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
     
-
-
-
-
     return logger

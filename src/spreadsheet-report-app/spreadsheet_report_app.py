@@ -199,7 +199,7 @@ class Spreadsheet_report_app:
 							
 							self.logger.debug(f"Reports  for user: {_userName} was already send : {_reportWasSend}")
 							if not _reportWasSend:
-								_userObj.sendReport(year=_now.year, month=_now.month, sendAsync=False, contentFooter=self.settings.get("eliona_handler", {}).get("instanceMailInfo", ""))
+								_userObj.sendReport(year=_now.year, month=_now.month, sendAsync=False)
 
 			else:
 

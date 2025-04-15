@@ -61,7 +61,9 @@ With the configuration you can define every requested settings in order to set u
     "api": "https://YOUR_INSTANCE_NAME.eliona.io/api/v2",
     "projectId": 1,
     "apiKey": "YOUR_ELIONA_API_KEY",
-    "dbTimeZone": 2
+    "dbTimeZone": "Europe/Zurich",
+    "instanceMailInfo": "Syngenta eliona onCloud",
+    "maxAttachmentSizeMB":"1"
 }
 ```
 
@@ -71,7 +73,10 @@ With the configuration you can define every requested settings in order to set u
 |api|Address of the used api endpoint in this case every time with the https at front |https://develop.eliona.cloud/api/v2|
 |projectId|Project number at the used eliona instance. (You can get the number by editing the project and get tne number from the address bar)|1 ![ProjectNumber](./doc/ProjectNumber.png)|
 |apiKey|The API-Key for the desired eliona instance in order to communicate with the eliona instance|You can get the Key from the eliona engineering Team|
-|dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC offset as integer.|
+|dbTimeZone|Defines the timezone the data was stored in the database. Enter the UTC by the required Timezone|
+|instanceMailInfo|Additional mail Footer. Should be used to identify the used eliona instance for the created report.|
+|maxAttachmentSizeMB|Maximum attachment size for the configured Kafka / Mailing service. After Reaching the limit the app will try to split / or zip the Attachments.|
+
 
 ### Report Scheduler
 
