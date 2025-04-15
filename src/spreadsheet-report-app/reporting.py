@@ -328,8 +328,7 @@ class BasicReport:
 
 		self.state = ReportState.SENDING
 
-		maxSize = int(self.elionaConfig.get("maxAttachmentSizeMB", "0")) * (2 ** 20)
-		maxSize = 100000
+		maxSize = int(self.elionaConfig.get("maxAttachmentSizeMB", "1")) * (2 ** 20)
 
 		splittedFileList = self._splitFileList(fileList=reports, maxSizeBytes=maxSize)
 
