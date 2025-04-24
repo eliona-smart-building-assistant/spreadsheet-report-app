@@ -2,7 +2,7 @@
 # Alpine => python:3.11.2-alpine
 # eliona => eliona/base-python:latest-3.11-alpine
 # eliona => eliona/base-python:latest-3.11-alpine-eliona
-FROM eliona/base-python:latest-3.11-alpine-eliona
+FROM eliona/base-python:latest-3.12-alpine-eliona
 
 # Set the workingdirectory for the application
 WORKDIR /app

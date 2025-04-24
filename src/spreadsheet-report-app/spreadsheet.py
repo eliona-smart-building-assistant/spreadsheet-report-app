@@ -58,7 +58,7 @@ class Spreadsheet:
 		self.logger.debug("Host: " + str(connectionSettings["host"]))
 
 		#Connect to the eliona instance
-		eliona = ElionaApiHandler(settings=connectionSettings, logger=LOGGER_NAME)
+		eliona = ElionaApiHandler(settings=connectionSettings, logger=LOGGER_NAME, retrys=4)
 		eliona.check_connection() 
 
 		#Check if the connection is established

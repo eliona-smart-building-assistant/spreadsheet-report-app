@@ -87,7 +87,7 @@ class Mail:
 			self.logger.debug("Host: " + str(connection["host"]))
 
 			#Connect to the eliona instance
-			eliona = ElionaApiHandler(settings=connection, logger=LOGGER_NAME)
+			eliona = ElionaApiHandler(settings=connection, logger=LOGGER_NAME, retrys=4)
 			eliona.check_connection() 
 
 			#Check if the connection is established
@@ -165,7 +165,7 @@ class Mail:
 		self.logger.debug("Host: " + str(connection["host"]))
 
 		#Connect to the eliona instance
-		_eliona = ElionaApiHandler(settings=connection, logger=LOGGER_NAME)
+		_eliona = ElionaApiHandler(settings=connection, logger=LOGGER_NAME, retrys=4)
 		_eliona.check_connection() 
 
 		#Check if the connection is established

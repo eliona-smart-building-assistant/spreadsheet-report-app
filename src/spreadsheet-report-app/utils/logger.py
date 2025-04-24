@@ -66,7 +66,7 @@ def createLogger(applicationName, customLogFormat = None, loglevel = LOG_LEVEL, 
         os.makedirs(os.path.dirname(logFile))
     formatter = logging.Formatter('%(asctime)s;%(levelname)s;%(name)s;\"%(message)s\"')
     # Konfiguriere Handler, der die Logdatei rotiert und neue erstellt, wenn sie älter als 1 Tag ist
-    fileHandler = TimedRotatingFileHandler(logFile, when='midnight', interval=1, backupCount=15)
+    fileHandler = TimedRotatingFileHandler(logFile, when='midnight', interval=1, backupCount=15, encoding="utf-8")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
     
