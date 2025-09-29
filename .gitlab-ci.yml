@@ -8,9 +8,7 @@ variables:
   CONTAINER_REGISTRY: "leicom.azurecr.io"
   CONTAINER_REGISTRY_PATH: "/apps/"
 
-  CONTAINER_NAME: "spreadsheet-report-app"
-
-  IMAGE_NAME: "datenwuerfel_vpn_reverse_proxy"
+  IMAGE_NAME: "spreadsheet-report-app"
   PACKAGE_VERSION: "${CI_COMMIT_TAG}"
   BASE_IMAGE: "docker:24.0.7"
 

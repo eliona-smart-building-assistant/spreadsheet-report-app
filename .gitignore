@@ -139,6 +139,7 @@ Documents/.DS_Store
 /env/*
 /apiTest/*
 /envApiV2
+/envV14
 
 # Ignore temp reports
 /tmp_reports/*
