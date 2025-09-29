@@ -96,6 +96,7 @@ You can ether create an user based or report based schedule. If you like you can
 |reportPath|Path of the generated report file. Should always be at "./tmp_reports/send"|./tmp_reports/send/report_001.xlsx |
 |receiver|List of users to receive the report||           
 |name|Sets the name of the receiver. Will be used in the message for text.|FirstName LastName|
+|subject|Sets the Subject for the reports per user. With %month the month name will be added and with %year the year of the report.|New eliona Reporting %month %year|
 |msgType|Selected message type. Currently only eMail is available|email|
 |msgEndpoint|Message destination. For type email musst be a valid email address|firstName.LastName@company.ch|
 |validateMsgPoint|Disables the email validation if the container has no valid dns configuration|false|
@@ -160,6 +161,7 @@ You can ether create an user based or report based schedule. If you like you can
     {
         "name": "FirstName001 LastName001",
         "msgType": "email",
+        "subject": "New eliona Reporting %month %year",
         "msgEndpoint": "firstName001.LastName001@company.ch",
         "validateMsgPoint": true,
         "reports": ["Report 003"]
@@ -167,6 +169,7 @@ You can ether create an user based or report based schedule. If you like you can
     {
         "name": "FirstName002 LastName002",
         "msgType": "email",
+        "subject": "New eliona Reporting %month %year",
         "msgEndpoint": "firstName002.LastName002@company.ch",
         "reports": ["Report 003", "Report 004"]
     }

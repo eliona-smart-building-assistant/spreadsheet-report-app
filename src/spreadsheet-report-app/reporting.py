@@ -132,9 +132,9 @@ class BasicReport:
 		self.mailHandler = Mail(logLevel=self.loggerLevel)
 
 		#Set the temp storage
-		_storePath = tempFilePath + "lastSend/"
+		_storePath = os.path.join(tempFilePath, "lastSend")
 		self._dirHandling(_storePath)
-		self.storePath = f"{_storePath}{_fileName}.json"
+		self.storePath = os.path.join(_storePath, f"{_fileName}.json")
 		self.readStorage()
 		
 		self.tempFilePath = tempFilePath
@@ -302,7 +302,8 @@ class BasicReport:
 		_startStamp, _stopStamp = self._getReportTimeSpan(schedule=_reportSchedule, timeZone=self.elionaConfig["dbTimeZone"], year=year, month=month)
 
 		_dayDelta = timedelta(days=1)
-		report["tempPath"] = self.tempFilePath + str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+		_fileName = str(report["reportPath"]).split(".")[0] + "_" + _startStamp.date().isoformat() + "_" + (_stopStamp.date() - _dayDelta).isoformat() + "." + str(report["reportPath"]).split(".")[-1]
+		report["tempPath"] = os.path.join(self.tempFilePath, _fileName)
 
 		self.logger.info(f"Call the reporting function for report: '{_reportName}' with start: '{_startStamp}' and end timestamp '{_stopStamp}'")
 
@@ -334,11 +335,13 @@ class BasicReport:
 
 		mailState = True
 
+		_monthName = datetime(year=self.reportYear, month=self.reportMonth, day=1).strftime("%B")
+
 		if subject == "":
-			_monthName = datetime(year=self.reportYear, month=self.reportMonth, day=1).strftime("%B")
 			_subjectString = f"eliona Benutzerreport vom {_monthName} {self.reportYear}"
 		else:
-			_subjectString = subject
+
+			_subjectString = subject.replace("%month", _monthName).replace("%year", str(self.reportYear))
 
 		for _idx, _reports in enumerate(splittedFileList):
 
@@ -552,7 +555,8 @@ class User(BasicReport):
 	"""
 	Object to handle all reports for one user
 	"""
-
+	
+	subject:str = ""
 	validateReceiver:bool
 
 	def __init__(self, name:str, tempFilePath:str, logLevel:int, testing:bool) -> None:
@@ -578,6 +582,8 @@ class User(BasicReport):
 		#Add the reports
 		self.reports = _reports
 
+		self.subject = userConfig.get("subject", "") 
+
 		#Add the user to the list
 		self.blindCopyRecipients = None
 		self.recipients = []
@@ -588,7 +594,7 @@ class User(BasicReport):
 
 		return super().configure(elionaConfig=elionaConfig)
 
-	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, subject:str="", content:str="") -> None:
+	def sendReport(self, year:int, month:int=0, createOnly:bool=False, sendAsync:bool=True, content:str="") -> None:
 		"""
 		Create and send the report.
 
@@ -616,7 +622,7 @@ class User(BasicReport):
 			return
 
 		#Pass to the parent class
-		super().sendReport(year, month, createOnly, sendAsync, subject, content, self.validateReceiver)
+		super().sendReport(year, month, createOnly, sendAsync, self.subject, content, self.validateReceiver)
 
 class Report(BasicReport):
 	"""
